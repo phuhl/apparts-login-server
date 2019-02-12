@@ -1,0 +1,6 @@
+{
+  "nameLengthMin": 3,
+  "pwLengthMin": 3,
+  "pwHashRounds": 10,
+  "tokenLength": 32
+}

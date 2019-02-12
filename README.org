@@ -1,0 +1,367 @@
+#+TITLE: Login and Signup
+#+DATE: [2019-02-06 Wed]
+#+AUTHOR: Philipp Uhl
+
+* Frontend
+
+** Redux Interface
+
+This component provides the states
+- ~token~ :: The Basic-auth token for the API
+- ~id~ :: The users ID
+- ~name~ :: The users name
+- ~email~ :: The users Email-Address
+
+In order to logout a user simply delete the complete store and return
+to the Login screen.
+
+** Screens
+
+This component provides the screens
+- ~Apparts.Login~ :: A Login-page for login with username and password
+- ~Apparts.Signup~ :: A Signup-page for username, password, name
+
+** Configuration
+
+The configuration options for this component have to be stored
+accessible by the =apparts-config=-module through the name =login=.
+They are:
+- ~screenAfterLogin {string}~ :: The screen to maneuver to after
+     successful login
+- ~screenAfterSignup {string}~ :: The screen to maneuver to after
+     successful signup
+- ~nameLengthMin {int}~ :: The minimum length for the username
+- ~pwLengthMin {int}~ :: The minimum length for the password
+
+For using the =apparts-config= module with react native it is
+necessary to use the =babel-plugin-module-resolver= module in order to
+replace the =apparts-config= module project wide with a short file
+that implements the function ~get~ like this:
+
+#+BEGIN_SRC js
+module.exports.get = (config) => {
+  return {
+    // my configs
+    login: {
+      screenAfterLogin: 'myApp.main',
+      screenAfterSignup: 'myApp.welcome'
+    }
+  }[config];
+};
+#+END_SRC
+
+The respective babel configuration in the file =babel.config.js= would
+be:
+
+#+BEGIN_SRC js
+module.exports = {
+  // ...
+  "plugins": [
+    ["module-resolver", {
+      "alias": {
+        "apparts-config": "./src/config.js",
+        "apparts-react-navigation": "./node_modules/apparts-react-navigation"
+      }
+    }]
+  ]
+};
+#+END_SRC
+
+** Usage
+
+1. To register the screens include the package =apparts-login= in your
+   =src/screens/index.js= like this:
+
+   #+BEGIN_SRC js
+   export { Login, Signup } from 'apparts-login';
+   #+END_SRC
+
+2. To use the default language files import them like this in your
+   =src/lang/index.js=:
+
+   #+BEGIN_SRC js
+   import * as AppartsLogin from 'apparts-login';
+   const lang = {};
+   // ...
+   Object.assign(lang, AppartsLogin.lang);
+   // ...
+   export default lang;
+   #+END_SRC
+
+   You can partly overwrite the provided ~lang~-Object if necessary.
+
+3. In order to start the application with a login/signup-screen:
+
+   #+BEGIN_SRC js
+   import { startApp } from './src/utils/navigation';
+   // get Store s
+   startApp({ startScreen: 'Apparts.Signup', store: s});
+   #+END_SRC
+
+4. It might be necessary to limit the directories from which modules
+   can be imported to only the root level of =node_modules= by putting
+   the following into your =webpack= configuration
+
+   #+BEGIN_SRC js
+     resolve: {
+       // ...
+       alias: {
+         // ...
+         'apparts-react-navigation': join(__dirname, './node_modules/apparts-react-navigation')
+       }
+     }
+   #+END_SRC
+
+5. Install peer-dependencies for frontend
+
+   - "apparts-frontend-api": "git+ssh://git@ph-uhl.com:Apparts/apparts-frontend-api.git#semver:^1.0.0",
+   - "apparts-react-native-components": "git+ssh://git@ph-uhl.com:Apparts/apparts-react-native-components.git#semver:^1.0.0",
+   - "apparts-react-navigation": "git+ssh://git@ph-uhl.com:Apparts/apparts-react-navigation.git#semver:^1.0.0",
+   - "apparts-redux": "git+ssh://git@ph-uhl.com:Apparts/apparts-redux.git#semver:^1.0.0",
+   - "base-64": "^0.1.0",
+   - "react": "^16.8.1",
+   - "react-native": "^0.58.4",
+
+* Backend
+
+** Usage
+
+1. Install peer-dependencies for backend
+
+   - "apparts-error": "git+ssh://git@ph-uhl.com:Apparts/apparts-error#semver:^1.0.0"
+   - "apparts-model": "git+ssh://git@ph-uhl.com:Apparts/apparts-model#semver:^1.0.0"
+   - "apparts-types": "git+ssh://git@ph-uhl.com:Apparts/apparts-types#semver:^1.0.0"
+   - "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"
+   - "bcrypt-nodejs": "0.0.3"
+   - "crypto": "^1.0.1"
+   - "express": "^4.16.4"
+
+2. Set user-model in your =app.js=
+   #+BEGIN_SRC js
+   const { prepauth } = require('apparts-types');
+   const User = require('./model/user.js');
+   prepauth.setUserModel(User);
+   #+END_SRC
+
+3. Start a Postgresql-server according to configuration
+
+4. Setup DB as needed or run =npm run setupDB=
+
+5. =npm run serve=
+
+** Configuration
+
+The configuration options for this component have to be stored
+accessible by the =apparts-config=-module through the name =login=.
+They are:
+- ~pwHashRounds {int}~ :: Amount of hash-rounds for password
+     storing, passend on to =bcrypt=
+- ~tokenLength {int}~ :: Length of login-token
+- ~nameLengthMin {int}~ :: The minimum length for the username
+- ~pwLengthMin {int}~ :: The minimum length for the password
+
+** Provided REST-API
+
+*** POST =/v1/user/=
+
+- Body Parameters
+  - ~name {string}~ :: Username
+  - ~email {email}~ :: Email
+  - ~password {password}~ :: Password
+- Returns
+  + ~{ id: {id}, token: {token}}~
+  + 400, ="name to short"=
+  + 400, ="pw to short"=
+  + 400, ="Username taken"=
+
+_Example:_
+#+BEGIN_SRC restclient
+:uname = testname3
+:email = testname3@gmail.com
+:pw = a123456
+
+POST http://127.0.0.1:3000/v1/user/
+Content-Type: application/x-www-form-urlencoded
+name=:uname&email=:email&password=:pw
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "id": 21,
+  "token": "sTrw72s8DtMbdHzSdT11sivW/0vjFkKy1FFpJkdzr2c="
+}
+// POST http://127.0.0.1:3000/v1/user/
+// HTTP/1.1 200 OK
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 64
+// ETag: W/"40-jhUPKq+D+iLyBAe1Xe3oODIv654"
+// Date: Tue, 12 Feb 2019 16:00:34 GMT
+// Connection: keep-alive
+// Request duration: 0.272916s
+#+END_SRC
+
+*** GET =/v1/user/:id=
+
+- Path Parameters
+  - ~int {id}~ :: Id of the user to be returned
+- Headers
+  - =Authorization= with =Basic= base64(username:token)
+- Returns
+  + ~{ id: {id}, name: {string} }~
+  + 400, ="Authorization wrong"=
+  + 401, ="Unauthorized"=
+  + 404
+
+_Example:_
+#+BEGIN_SRC restclient
+:my-auth := (base64-encode-string "testname3@gmail.com:0mK3qRBqyuHGcrxghZRXGbynLlx6LDxr5+TT0FJOJv0=" t)
+
+GET http://127.0.0.1:3000/v1/user/20
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic :my-auth
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "id": 20,
+  "name": "testname3"
+}
+// GET http://127.0.0.1:3000/v1/user/20
+// HTTP/1.1 200 OK
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 28
+// ETag: W/"1c-7vM82X4RsHmDNUOUE2XcYT5mRCM"
+// Date: Tue, 12 Feb 2019 15:57:00 GMT
+// Connection: keep-alive
+// Request duration: 0.007437s
+#+END_SRC
+
+*** GET =/v1/user/:id/token=
+
+- Path Parameters
+  - ~int {id}~ :: Id of the user, can be anything, will always use
+                  your id
+- Headers
+  - =Authorization= with =Basic= base64(username:password)
+- Returns
+  + ~{ id: {id}, token: {token} }~
+  + 400, ="Authorization wrong"=
+  + 401, ="Unauthorized"=
+  + 404
+
+
+_Example:_
+#+BEGIN_SRC restclient
+:my-auth := (base64-encode-string "testname3@gmail.com:a123456" t)
+
+GET http://127.0.0.1:3000/v1/user/1/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic :my-auth
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "id": 20,
+  "token": "0mK3qRBqyuHGcrxghZRXGbynLlx6LDxr5+TT0FJOJv0="
+}
+// GET http://127.0.0.1:3000/v1/user/1/token
+// HTTP/1.1 200 OK
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 64
+// ETag: W/"40-zxDI4x20J1VZXlBxXXI+Yyu6458"
+// Date: Tue, 12 Feb 2019 15:55:47 GMT
+// Connection: keep-alive
+// Request duration: 0.268833s
+#+END_SRC
+
+*** DELETE =/v1/user/:id=
+
+- Path Parameters
+  - ~int {id}~ :: Id of the user to be deleted
+- Headers
+  - =Authorization= with =Basic= base64(username:password)
+- Returns
+  + ="ok"=
+  + 400, ="Authorization wrong"=
+  + 401, ="Unauthorized"=
+  + 404, ="User not found"=
+
+_Example:_
+#+BEGIN_SRC restclient
+:my-auth := (base64-encode-string "testname1@gmail.com:a123456" t)
+
+DELETE http://127.0.0.1:3000/v1/user/17
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic :my-auth
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+"ok"
+// DELETE http://127.0.0.1:3000/v1/user/17
+// HTTP/1.1 200 OK
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 4
+// ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
+// Date: Tue, 12 Feb 2019 15:59:24 GMT
+// Connection: keep-alive
+// Request duration: 0.259496s
+#+END_SRC
+
+*** PUT =/v1/user/:id=
+
+- Path Parameters
+  - ~int {id}~ :: Id of the user to be changed
+- Body Parameters
+  - ~name {string}~ :: Optional, new name of the user
+  - ~email {email}~ :: Optional, new email of the user
+  - ~newpassword {password}~ :: Optional, new password of the user
+- Headers
+  - =Authorization= with =Basic= base64(username:password)
+- Returns
+  + ="ok"=
+  + 400, ="nothing to update"=
+  + 400, ="Email exists already"=
+  + 400, ="Authorization wrong"=
+  + 401, ="Unauthorized"=
+
+_Example:_
+#+BEGIN_SRC restclient
+:my-auth := (base64-encode-string "testname3@gmail.com:a123456" t)
+
+PUT http://127.0.0.1:3000/v1/user/20
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic :my-auth
+name=dude
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+"ok"
+// PUT http://127.0.0.1:3000/v1/user/20
+// HTTP/1.1 200 OK
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 4
+// ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
+// Date: Tue, 12 Feb 2019 15:57:51 GMT
+// Connection: keep-alive
+// Request duration: 0.237280s
+#+END_SRC

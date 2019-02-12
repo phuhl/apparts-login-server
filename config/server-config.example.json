@@ -1,0 +1,5 @@
+{
+  "trustProxy": false,
+  "allowedHosts": [],
+  "port": 3000
+}
