@@ -14,22 +14,28 @@ module.exports = (dbs) => class User extends Model(dbs) {
       name: { type: "string", public: true },
       email: { type: "email", unique: true },
       token: { type: "base64" },
+      tokenForReset: { type: "bool", optional: true},
       hash: { type: "/" },
-      createdOn: { type: "time", default: () => new Date.getTime() },
-      credits: { type: "float", default: 0 }
+      createdOn: { type: "time", default: () => new Date.getTime() }
     }, "user", contents);
   }
 
-  _checkToken(token){
-    return (token && token === this.contents[0].token) ? Promise.resolve(this)
-      : Promise.reject(new HttpError(401));
+  async _checkToken(token){
+    if(!token || token !== this.contents[0].token){
+      throw new HttpError(401);
+    }
+    if(this.contents[0].tokenForReset){
+      this.contents[0].token = '';
+      await this.update();
+    }
+    return this;
   }
 
-  checkAuth(token, email){
-    return this._checkToken(token);
+  async checkAuth(token, email){
+    return await this._checkToken(token);
   }
 
-  _checkPw(password){
+  _checkPw(password=""){
     return new Promise((res, rej) => {
       bcrypt.compare(
         password, this.contents[0].hash,
@@ -86,6 +92,11 @@ module.exports = (dbs) => class User extends Model(dbs) {
           }
         });
     });
+  }
+
+  async genResetToken(){
+    await this.genToken();
+    this.contents[0].tokenForReset = true;
   }
 
   addCredits(c){

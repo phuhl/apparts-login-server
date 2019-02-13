@@ -2,126 +2,6 @@
 #+DATE: [2019-02-06 Wed]
 #+AUTHOR: Philipp Uhl
 
-* Frontend
-
-** Redux Interface
-
-This component provides the states
-- ~token~ :: The Basic-auth token for the API
-- ~id~ :: The users ID
-- ~name~ :: The users name
-- ~email~ :: The users Email-Address
-
-In order to logout a user simply delete the complete store and return
-to the Login screen.
-
-** Screens
-
-This component provides the screens
-- ~Apparts.Login~ :: A Login-page for login with username and password
-- ~Apparts.Signup~ :: A Signup-page for username, password, name
-
-** Configuration
-
-The configuration options for this component have to be stored
-accessible by the =apparts-config=-module through the name =login=.
-They are:
-- ~screenAfterLogin {string}~ :: The screen to maneuver to after
-     successful login
-- ~screenAfterSignup {string}~ :: The screen to maneuver to after
-     successful signup
-- ~nameLengthMin {int}~ :: The minimum length for the username
-- ~pwLengthMin {int}~ :: The minimum length for the password
-
-For using the =apparts-config= module with react native it is
-necessary to use the =babel-plugin-module-resolver= module in order to
-replace the =apparts-config= module project wide with a short file
-that implements the function ~get~ like this:
-
-#+BEGIN_SRC js
-module.exports.get = (config) => {
-  return {
-    // my configs
-    login: {
-      screenAfterLogin: 'myApp.main',
-      screenAfterSignup: 'myApp.welcome'
-    }
-  }[config];
-};
-#+END_SRC
-
-The respective babel configuration in the file =babel.config.js= would
-be:
-
-#+BEGIN_SRC js
-module.exports = {
-  // ...
-  "plugins": [
-    ["module-resolver", {
-      "alias": {
-        "apparts-config": "./src/config.js",
-        "apparts-react-navigation": "./node_modules/apparts-react-navigation"
-      }
-    }]
-  ]
-};
-#+END_SRC
-
-** Usage
-
-1. To register the screens include the package =apparts-login= in your
-   =src/screens/index.js= like this:
-
-   #+BEGIN_SRC js
-   export { Login, Signup } from 'apparts-login';
-   #+END_SRC
-
-2. To use the default language files import them like this in your
-   =src/lang/index.js=:
-
-   #+BEGIN_SRC js
-   import * as AppartsLogin from 'apparts-login';
-   const lang = {};
-   // ...
-   Object.assign(lang, AppartsLogin.lang);
-   // ...
-   export default lang;
-   #+END_SRC
-
-   You can partly overwrite the provided ~lang~-Object if necessary.
-
-3. In order to start the application with a login/signup-screen:
-
-   #+BEGIN_SRC js
-   import { startApp } from './src/utils/navigation';
-   // get Store s
-   startApp({ startScreen: 'Apparts.Signup', store: s});
-   #+END_SRC
-
-4. It might be necessary to limit the directories from which modules
-   can be imported to only the root level of =node_modules= by putting
-   the following into your =webpack= configuration
-
-   #+BEGIN_SRC js
-     resolve: {
-       // ...
-       alias: {
-         // ...
-         'apparts-react-navigation': join(__dirname, './node_modules/apparts-react-navigation')
-       }
-     }
-   #+END_SRC
-
-5. Install peer-dependencies for frontend
-
-   - "apparts-frontend-api": "git+ssh://git@ph-uhl.com:Apparts/apparts-frontend-api.git#semver:^1.0.0",
-   - "apparts-react-native-components": "git+ssh://git@ph-uhl.com:Apparts/apparts-react-native-components.git#semver:^1.0.0",
-   - "apparts-react-navigation": "git+ssh://git@ph-uhl.com:Apparts/apparts-react-navigation.git#semver:^1.0.0",
-   - "apparts-redux": "git+ssh://git@ph-uhl.com:Apparts/apparts-redux.git#semver:^1.0.0",
-   - "base-64": "^0.1.0",
-   - "react": "^16.8.1",
-   - "react-native": "^0.58.4",
-
 * Backend
 
 ** Usage
@@ -331,8 +211,10 @@ Authorization: Basic :my-auth
   - ~name {string}~ :: Optional, new name of the user
   - ~email {email}~ :: Optional, new email of the user
   - ~newpassword {password}~ :: Optional, new password of the user
+  - ~password {password}~ :: Optional, old password of the user,
+       *required if not using a passwort-reset token*
 - Headers
-  - =Authorization= with =Basic= base64(username:password)
+  - =Authorization= with =Basic= base64(username:token)
 - Returns
   + ="ok"=
   + 400, ="nothing to update"=
@@ -342,18 +224,18 @@ Authorization: Basic :my-auth
 
 _Example:_
 #+BEGIN_SRC restclient
-:my-auth := (base64-encode-string "testname3@gmail.com:a123456" t)
+:my-auth := (base64-encode-string "test@web.de:FcvsslFITxgPyszUy80NDee+WOTE7xdn1zASyDwdx90=" t)
 
-PUT http://127.0.0.1:3000/v1/user/20
+PUT http://127.0.0.1:3001/v1/user/20
 Content-Type: application/x-www-form-urlencoded
 Authorization: Basic :my-auth
-name=dude
+name=dude&password=myPw1
 #+END_SRC
 
 #+RESULTS:
 #+BEGIN_SRC js
 "ok"
-// PUT http://127.0.0.1:3000/v1/user/20
+// PUT http://127.0.0.1:3001/v1/user/20
 // HTTP/1.1 200 OK
 // X-Powered-By: Express
 // Vary: Origin
@@ -361,7 +243,72 @@ name=dude
 // Content-Type: application/json; charset=utf-8
 // Content-Length: 4
 // ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
-// Date: Tue, 12 Feb 2019 15:57:51 GMT
+// Date: Wed, 13 Feb 2019 15:36:32 GMT
 // Connection: keep-alive
-// Request duration: 0.237280s
+// Request duration: 0.259056s
 #+END_SRC
+
+*** POST =/v1/user/:email/reset=
+
+- Path Parameters
+  - ~email {emial}~ :: Email of the user to be changed
+- Returns
+  + ="ok"=
+
+_Example:_
+#+BEGIN_SRC restclient
+POST http://127.0.0.1:3000/v1/user/abc@web.de/reset
+Content-Type: application/x-www-form-urlencoded
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+"ok"
+// POST http://127.0.0.1:3001/v1/user/abc@web.de/reset
+// HTTP/1.1 200 OK
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 4
+// ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
+// Date: Wed, 13 Feb 2019 15:33:11 GMT
+// Connection: keep-alive
+// Request duration: 0.020691s
+#+END_SRC
+
+* Test
+
+
+
+
+#+BEGIN_SRC restclient
+
+
+POST http://127.0.0.1:3001/v1/user/
+Content-Type: application/json; charset=utf-8
+{"email":"testweb.de","password":"a12345","name":"Testuser"}
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "error": "Fieldmissmatch",
+  "field": "body",
+  "message": {
+    "email": "expected email"
+  }
+}
+// POST http://127.0.0.1:3001/v1/user/
+// HTTP/1.1 400 Bad Request
+// X-Powered-By: Express
+// Vary: Origin
+// Access-Control-Allow-Credentials: true
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 78
+// ETag: W/"4e-q12YiSuG3vphm5d0GGpdl7X5fwI"
+// Date: Tue, 12 Feb 2019 23:22:26 GMT
+// Connection: keep-alive
+// Request duration: 0.002617s
+#+END_SRC
+

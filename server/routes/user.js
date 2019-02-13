@@ -96,31 +96,57 @@ module.exports = (dbs, mailhandler) => {
       body: {
         name: {type: 'string', optional: true},
         email: {type: 'email', optional: true},
-        newpassword: {type: 'password', optional: true}
+        newpassword: {type: 'password', optional: true},
+        password: {type: 'password', optional: true}
       }
     },
-    async function({ params: { id }, body}, me){
-      if(Object.keys(body).length === 0){
+    async function({body: { name, email, newpassword, password }}, me){
+      if(!me.contents[0].tokenForReset){
+        await me.checkAuthPw(password);
+      } else {
+        me.contents[0].tokenForReset = false;
+        await me.genToken();
+      }
+
+      if(!name && !email && !newpassword){
         return new HttpError(400, "nothing to update");
       }
-      if(id !== me.contents[0]._id){
-        return new HttpError(401);
+      if(name){
+        me.contents[0].name = name;
       }
-      if(body.name){
-        me.contents[0].name = body.name;
+      if(newpassword) {
+        await me.setPw(newpassword);
       }
-      if(body.newpassword) {
-        await me.setPw(body.newpassword);
-      }
-      if(body.email){
+      if(email){
         try {
-          await new User().loadNone({ email : body.email.toLowerCase() });
-          me.contents[0].email = body.email.toLowerCase();
+          await new User().loadNone({ email : email.toLowerCase() });
+          me.contents[0].email = email.toLowerCase();
         } catch (e) {
           return exceptionTo(DoesExist, e,
                              new HttpError(400, "Email exists already"));
         }
       }
+      await me.update();
+      return "ok";
+    }, {strap : true}));
+
+  router.post('/:email/reset', preparator(
+    {
+      params: {
+        email: { type: 'email'}
+      }
+    },
+    async function({ params: { email } }){
+      const me = new User();
+      try {
+        await me.loadOne({ email: email.toLowerCase() });
+      } catch(e) {
+        console.log('nope', e);
+        catchException(NotFound, e);
+        return "ok";
+      }
+      await me.genResetToken();
+      console.log(`?token=${encodeURIComponent(me.contents[0].token)}&mail=${email}`);
       await me.update();
       return "ok";
     }, {strap : true}, true));

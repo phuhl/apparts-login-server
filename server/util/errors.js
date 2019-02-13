@@ -2,13 +2,13 @@ const { HttpError } = require('apparts-error');
 
 class HttpUserNotFound extends HttpError {
   constructor(params){
-    super({...params, code: 404, message: "User not found"});
+    super(404, "User not found");
   }
 };
 
 class HttpUserExists extends HttpError {
   constructor(params){
-    super({...params, code: 400, message: "Username taken"});
+    super(400, "Username taken");
   }
 };
 
