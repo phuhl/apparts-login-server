@@ -19,19 +19,23 @@ module.exports = (dbs, mailhandler) => {
       body: {
         name: {type: 'string'},
         email: {type: 'email'},
-        password: {type: 'password'}
+        password: {type: 'password'},
+        lang: {type: 'string'}
       }
     },
-    async function({ body : { name, email, password }}){
+    async function({ body : { name, email, password, lang }}){
       if(name.length < UserSettings.nameLengthMin ){
         return new HttpError(400, "name to short");
       }
       if(name.length < UserSettings.nameLengthMin ){
         return new HttpError(400, "pw to short");
       }
-
+      if(UserSettings.supportedLanguages.indexOf(lang) === -1){
+        return new HttpError(400, "lang not supported");
+      }
       const me = new User({ name, email: email.toLowerCase(),
-                          createdOn: new Date().getTime()});
+                            language: lang,
+                            createdOn: new Date().getTime()});
       await me.setPw(password);
       await me.genToken();
       try {

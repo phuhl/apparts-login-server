@@ -13,6 +13,7 @@ module.exports = (dbs) => class User extends Model(dbs) {
       _id: { type: "id", public: true, mapped: "id", key: true },
       name: { type: "string", public: true },
       email: { type: "email", unique: true },
+      language: { type: "string", public: true },
       token: { type: "base64" },
       tokenForReset: { type: "bool", optional: true},
       hash: { type: "/" },
