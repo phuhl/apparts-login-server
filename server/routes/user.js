@@ -105,10 +105,10 @@ module.exports = (dbs, mailhandler) => {
       }
     },
     async function({body: { name, email, newpassword, password }}, me){
-      if(!me.contents[0].tokenForReset){
+      if(!me.resetTokenUsed){
         await me.checkAuthPw(password);
       } else {
-        me.contents[0].tokenForReset = false;
+        me.contents[0].tokenForReset = null;
         await me.genToken();
       }
 
@@ -120,6 +120,7 @@ module.exports = (dbs, mailhandler) => {
       }
       if(newpassword) {
         await me.setPw(newpassword);
+        await me.genToken();
       }
       if(email){
         try {
@@ -145,12 +146,11 @@ module.exports = (dbs, mailhandler) => {
       try {
         await me.loadOne({ email: email.toLowerCase() });
       } catch(e) {
-        console.log('nope', e);
         catchException(NotFound, e);
         return "ok";
       }
       await me.genResetToken();
-      console.log(`?token=${encodeURIComponent(me.contents[0].token)}&mail=${email}`);
+      console.log(`?token=${encodeURIComponent(me.contents[0].tokenForReset)}&mail=${email}`);
       await me.update();
       return "ok";
     }, {strap : true}, true));

@@ -15,18 +15,20 @@ module.exports = (dbs) => class User extends Model(dbs) {
       email: { type: "email", unique: true },
       language: { type: "string", public: true },
       token: { type: "base64" },
-      tokenForReset: { type: "bool", optional: true},
+      tokenForReset: { type: "base64", optional: true},
       hash: { type: "/" },
       createdOn: { type: "time", default: () => new Date.getTime() }
     }, "user", contents);
   }
 
   async _checkToken(token){
-    if(!token || token !== this.contents[0].token){
+    if(!token || (token !== this.contents[0].token
+                  && token !== this.contents[0].tokenForReset)){
       throw new HttpError(401);
     }
     if(this.contents[0].tokenForReset){
-      this.contents[0].token = '';
+      this.contents[0].tokenForReset = '';
+      this.resetTokenUsed = true;
       await this.update();
     }
     return this;
@@ -96,8 +98,10 @@ module.exports = (dbs) => class User extends Model(dbs) {
   }
 
   async genResetToken(){
+    const oldToken = this.contents[0].token;
     await this.genToken();
-    this.contents[0].tokenForReset = true;
+    this.contents[0].tokenForReset = this.contents[0].token;
+    this.contents[0].token = oldToken;
   }
 
   addCredits(c){
