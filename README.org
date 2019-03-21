@@ -40,6 +40,7 @@ They are:
 - ~nameLengthMin {int}~ :: The minimum length for the username
 - ~pwLengthMin {int}~ :: The minimum length for the password
 - ~supportedLanguages {[string]}~ :: List of supported languages
+
 ** Provided REST-API
 
 *** POST =/v1/user/=
