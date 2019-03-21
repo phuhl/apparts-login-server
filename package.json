@@ -1,6 +1,6 @@
 {
   "name": "apparts-login-server",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Login and Signup for Web, Apps, Server",
   "main": "index.js",
   "scripts": {
@@ -29,8 +29,8 @@
   "peerDependencies": {
     "apparts-config": "git+ssh://git@ph-uhl.com:Apparts/apparts-config#semver:^1.0.0",
     "apparts-error": "git+ssh://git@ph-uhl.com:Apparts/apparts-error#semver:^1.0.0",
-    "apparts-model": "git+ssh://git@ph-uhl.com:Apparts/apparts-model#semver:^1.0.0",
-    "apparts-types": "git+ssh://git@ph-uhl.com:Apparts/apparts-types#semver:^1.0.0"
+    "apparts-model": "git+ssh://git@ph-uhl.com:Apparts/apparts-model#semver:^2.0.0",
+    "apparts-types": "git+ssh://git@ph-uhl.com:Apparts/apparts-types#semver:^2.0.0"
   },
   "optionalPeerDependencies": {
     "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"
