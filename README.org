@@ -66,12 +66,12 @@ They are:
   - ~password {password}~ :: Password
 - Returns
   + ~{ id: {id}, token: {token}}~
-  + 400, ="name to short"=
-  + 400, ="pw to short"=
-  + 400, ="Username taken"=
+  + 400, ~"name to short"~
+  + 400, ~"pw to short"~
+  + 400, ~"Username taken"~
 
 _Example:_
-#+BEGIN_SRC restclient
+#+BEGIN_SRC restclient :exports both
 :uname = testname3
 :email = testname3@gmail.com
 :pw = a123456
@@ -108,12 +108,12 @@ name=:uname&email=:email&password=:pw
   - =Authorization= with =Basic= base64(username:token)
 - Returns
   + ~{ id: {id}, name: {string} }~
-  + 400, ="Authorization wrong"=
-  + 401, ="Unauthorized"=
+  + 400, ~"Authorization wrong"~
+  + 401, ~"Unauthorized"~
   + 404
 
 _Example:_
-#+BEGIN_SRC restclient
+#+BEGIN_SRC restclient :exports both
 :my-auth := (base64-encode-string "testname3@gmail.com:0mK3qRBqyuHGcrxghZRXGbynLlx6LDxr5+TT0FJOJv0=" t)
 
 GET http://127.0.0.1:3000/v1/user/20
@@ -149,13 +149,13 @@ Authorization: Basic :my-auth
   - =Authorization= with =Basic= base64(username:password)
 - Returns
   + ~{ id: {id}, token: {token} }~
-  + 400, ="Authorization wrong"=
-  + 401, ="Unauthorized"=
+  + 400, ~"Authorization wrong"~
+  + 401, ~"Unauthorized"~
   + 404
 
 
 _Example:_
-#+BEGIN_SRC restclient
+#+BEGIN_SRC restclient :exports both
 :my-auth := (base64-encode-string "testname3@gmail.com:a123456" t)
 
 GET http://127.0.0.1:3000/v1/user/1/token
@@ -189,13 +189,13 @@ Authorization: Basic :my-auth
 - Headers
   - =Authorization= with =Basic= base64(username:password)
 - Returns
-  + ="ok"=
-  + 400, ="Authorization wrong"=
-  + 401, ="Unauthorized"=
-  + 404, ="User not found"=
+  + ~"ok"~
+  + 400, ~"Authorization wrong"~
+  + 401, ~"Unauthorized"~
+  + 404, ~"User not found"~
 
 _Example:_
-#+BEGIN_SRC restclient
+#+BEGIN_SRC restclient :exports both
 :my-auth := (base64-encode-string "testname1@gmail.com:a123456" t)
 
 DELETE http://127.0.0.1:3000/v1/user/17
@@ -232,14 +232,14 @@ Authorization: Basic :my-auth
 - Headers
   - =Authorization= with =Basic= base64(username:token)
 - Returns
-  + ="ok"=
-  + 400, ="nothing to update"=
-  + 400, ="Email exists already"=
-  + 400, ="Authorization wrong"=
-  + 401, ="Unauthorized"=
+  + ~"ok"~
+  + 400, ~"nothing to update"~
+  + 400, ~"Email exists already"~
+  + 400, ~"Authorization wrong"~
+  + 401, ~"Unauthorized"~
 
 _Example:_
-#+BEGIN_SRC restclient
+#+BEGIN_SRC restclient :exports both
 :my-auth := (base64-encode-string "test@web.de:FcvsslFITxgPyszUy80NDee+WOTE7xdn1zASyDwdx90=" t)
 
 PUT http://127.0.0.1:3001/v1/user/20
@@ -269,10 +269,10 @@ name=dude&password=myPw1
 - Path Parameters
   - ~email {emial}~ :: Email of the user to be changed
 - Returns
-  + ="ok"=
+  + ~"ok"~
 
 _Example:_
-#+BEGIN_SRC restclient
+#+BEGIN_SRC restclient :exports both
 POST http://127.0.0.1:3000/v1/user/abc@web.de/reset
 Content-Type: application/x-www-form-urlencoded
 #+END_SRC
@@ -300,15 +300,22 @@ Content-Type: application/x-www-form-urlencoded
 
 #+BEGIN_SRC plantuml :exports results :file login.png
 actor User
+skinparam roundcorner 5
+skinparam monochrome true
+skinparam shadowing false
 
 group Login
 User -> Loginservice : login with PW
-User <-- Loginservice : jwt
+activate Loginservice
+User <-- Loginservice : JWT
+deactivate Loginservice
 end
 
 group API request
-User -> API : api request with jwt
+User -> API : api request with JWT
+activate API
 API --> User : response
+deactivate API
 note right
 The API does not need to contact
 the Loginservice, as all required data
@@ -318,16 +325,22 @@ end
 
 group Refresh token
 
-... jwt ages  ...
+... JWT ages  ...
 
-User -> API : api request with old jwt
+User -> API : api request with old JWT
+activate API
 User <--x API : 401
+deactivate API
 
 User -> Loginservice : refresh token
-User <-- Loginservice : jwt
+activate Loginservice
+User <-- Loginservice : JWT
+deactivate Loginservice
 
-User -> API : api request with new jwt
+User -> API : api request with new JWT
+activate API
 API --> User : response
+deactivate API
 end
 
 #+END_SRC
@@ -339,15 +352,18 @@ end
 
 #+BEGIN_SRC plantuml :file resetpw.png :exports results
 actor User
+skinparam roundcorner 5
+skinparam monochrome true
+skinparam shadowing false
 
-User -> Loginservice : login with wrong PW
+User -> Loginservice : Login with wrong PW
 activate Loginservice
 User <--x Loginservice : 401
 deactivate Loginservice
 
 User -> Loginservice : resetPassword
 activate Loginservice
-Loginservice -> Mailserver : send mail with token
+Loginservice -> Mailserver : Send mail with token
 activate Mailserver
 User <-- Loginservice : "ok"
 deactivate Loginservice
@@ -355,6 +371,10 @@ User <-- Mailserver : Mail with token
 deactivate Mailserver
 
 User -> Loginservice : Reset PW [Token from mail]
+activate Loginservice
+User <-- Loginservice : "ok"
+deactivate Loginservice
+
 #+END_SRC
 
 #+RESULTS:
@@ -363,8 +383,12 @@ User -> Loginservice : Reset PW [Token from mail]
 ** Signup
 
 #+BEGIN_SRC plantuml :file signup.png :exports results
+skinparam roundcorner 5
+skinparam monochrome true
+skinparam shadowing false
 actor User
 
+group Signup
 User -> Loginservice : POST user with email
 activate Loginservice
 Loginservice -> Mailserver : send mail with token
@@ -375,7 +399,17 @@ User <-- Mailserver : Mail with token
 deactivate Mailserver
 
 User -> Loginservice : Set PW [Token from mail]
+activate Loginservice
+User <-- Loginservice : "ok"
+deactivate Loginservice
+end
 
+group Login
+User -> Loginservice : login with PW
+activate Loginservice
+User <-- Loginservice : JWT
+deactivate Loginservice
+end
 #+END_SRC
 
 #+RESULTS:
