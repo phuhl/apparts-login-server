@@ -337,7 +337,7 @@ end
 
 ** Password reset
 
-#+BEGIN_SRC plantuml :file resetpw.png
+#+BEGIN_SRC plantuml :file resetpw.png :exports results
 actor User
 
 User -> Loginservice : login with wrong PW
@@ -362,7 +362,7 @@ User -> Loginservice : Reset PW [Token from mail]
 
 ** Signup
 
-#+BEGIN_SRC plantuml :file signup.png
+#+BEGIN_SRC plantuml :file signup.png :exports results
 actor User
 
 User -> Loginservice : POST user with email
