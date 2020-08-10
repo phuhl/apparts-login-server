@@ -40,6 +40,21 @@ They are:
 - ~nameLengthMin {int}~ :: The minimum length for the username
 - ~pwLengthMin {int}~ :: The minimum length for the password
 - ~supportedLanguages {[string]}~ :: List of supported languages
+- ~welcomeMail {object}~ :: The object should have keys ~title~ and
+  ~body~. Within both, all occurrences of the string "##NAME##" will
+  be replaced with the users name. In the body, all occurences of the
+  string "##URL##" will be replaced with a URL for setting the
+  password and thus confirming the email address.
+- ~resetPWMail {object}~ :: The object should have keys ~title~ and
+  ~body~. Within both, all occurrences of the string "##NAME##" will
+  be replaced with the users name. In the body, all occurences of the
+  string "##URL##" will be replaced with a URL for resetting the
+  password.
+- ~resetUrl {string}~ :: The URL, that will be send emails for setting
+  and resetting passwords. Appended query parameters:
+  - ~token {string}~ :: An auth token
+  - ~?welcome {bool}~ :: Set to true, if this is not from a password
+    reset mail, but from a welcome mail.
 
 ** Provided REST-API
 
@@ -278,38 +293,90 @@ Content-Type: application/x-www-form-urlencoded
 // Request duration: 0.020691s
 #+END_SRC
 
-* Test
 
+* Flows
 
+** Login and API-flow
 
+#+BEGIN_SRC plantuml :file login.png
+actor User
 
-#+BEGIN_SRC restclient
+group Login
+User -> Loginservice : login with PW
+User <-- Loginservice : jwt
+end
 
+group API request
+User -> API : api request with jwt
+API --> User : response
+note right
+The API does not need to contact
+the Loginservice, as all required data
+is in the JWT
+end note
+end
 
-POST http://127.0.0.1:3001/v1/user/
-Content-Type: application/json; charset=utf-8
-{"email":"testweb.de","password":"a12345","name":"Testuser"}
+group Refresh token
+
+... jwt ages  ...
+
+User -> API : api request with old jwt
+User <--x API : 401
+
+User -> Loginservice : refresh token
+User <-- Loginservice : jwt
+
+User -> API : api request with new jwt
+API --> User : response
+end
+
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC js
-{
-  "error": "Fieldmissmatch",
-  "field": "body",
-  "message": {
-    "email": "expected email"
-  }
-}
-// POST http://127.0.0.1:3001/v1/user/
-// HTTP/1.1 400 Bad Request
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 78
-// ETag: W/"4e-q12YiSuG3vphm5d0GGpdl7X5fwI"
-// Date: Tue, 12 Feb 2019 23:22:26 GMT
-// Connection: keep-alive
-// Request duration: 0.002617s
+[[file:login.png]]
+
+** Password reset
+
+#+BEGIN_SRC plantuml :file resetpw.png
+actor User
+
+User -> Loginservice : login with wrong PW
+activate Loginservice
+User <--x Loginservice : 401
+deactivate Loginservice
+
+User -> Loginservice : resetPassword
+activate Loginservice
+Loginservice -> Mailserver : send mail with token
+activate Mailserver
+User <-- Loginservice : "ok"
+deactivate Loginservice
+User <-- Mailserver : Mail with token
+deactivate Mailserver
+
+User -> Loginservice : Reset PW [Token from mail]
 #+END_SRC
 
+#+RESULTS:
+[[file:resetpw.png]]
+
+** Signup
+
+#+BEGIN_SRC plantuml :file signup.png
+actor User
+
+User -> Loginservice : POST user with email
+activate Loginservice
+Loginservice -> Mailserver : send mail with token
+activate Mailserver
+User <-- Loginservice : "ok"
+deactivate Loginservice
+User <-- Mailserver : Mail with token
+deactivate Mailserver
+
+User -> Loginservice : Set PW [Token from mail]
+
+#+END_SRC
+
+#+RESULTS:
+[[file:signup.png]]
