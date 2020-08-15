@@ -1,0 +1,11 @@
+{
+  "nameLengthMin": 3,
+  "pwLengthMin": 3,
+  "pwHashRounds": 10,
+  "tokenLength": 32,
+  "pwHashRounds": 10,
+  "apiToken": {
+    "webtokenkey": "AotyUwtiedt20923oaristN##AST0I.a.x./asrtu",
+    "expireTime": "10 minutes"
+  }
+}

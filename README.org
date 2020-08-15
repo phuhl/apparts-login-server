@@ -4,13 +4,15 @@
 
 * Backend
 
-** Usage
+** TODO Usage
 
 1. Install peer-dependencies for backend
 
-   - "apparts-error": "git+ssh://git@ph-uhl.com:Apparts/apparts-error#semver:^1.0.0"
-   - "apparts-model": "git+ssh://git@ph-uhl.com:Apparts/apparts-model#semver:^1.0.0"
-   - "apparts-types": "git+ssh://git@ph-uhl.com:Apparts/apparts-types#semver:^1.0.0"
+   - "@apparts/config": "^1.0.5",
+   - "@apparts/error": "^1.0.3",
+   - "@apparts/types": "^2.6.1",
+   - "@apparts/db": "^2.0.0",
+   - "@apparts/model": "^3.0.0"
    - "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"
    - "bcrypt-nodejs": "0.0.3"
    - "crypto": "^1.0.1"
@@ -31,8 +33,14 @@
 
 ** Configuration
 
+In =db-config=
+- ~bigIntAsNumber~ must be ~true~
+
+In =types-config=
+-   ~idType~ must be ~"int"~
+
 The configuration options for this component have to be stored
-accessible by the =apparts-config=-module through the name =login=.
+accessible by the =apparts-config=-module through the name =login-config=.
 They are:
 - ~pwHashRounds {int}~ :: Amount of hash-rounds for password
      storing, passend on to =bcrypt=
@@ -58,7 +66,7 @@ They are:
 
 ** Provided REST-API
 
-*** POST =/v1/user/=
+*** TODO POST =/v1/user/=
 
 - Body Parameters
   - ~name {string}~ :: Username
@@ -100,7 +108,7 @@ name=:uname&email=:email&password=:pw
 // Request duration: 0.272916s
 #+END_SRC
 
-*** GET =/v1/user/:id=
+*** TODO GET =/v1/user/:id=
 
 - Path Parameters
   - ~int {id}~ :: Id of the user to be returned
@@ -140,25 +148,30 @@ Authorization: Basic :my-auth
 // Request duration: 0.007437s
 #+END_SRC
 
-*** GET =/v1/user/:id/token=
+*** GET =/v1/user/token=
 
-- Path Parameters
-  - ~int {id}~ :: Id of the user, can be anything, will always use
-                  your id
 - Headers
   - =Authorization= with =Basic= base64(username:password)
 - Returns
-  + ~{ id: {id}, token: {token} }~
+  + 200, 
+    : {
+    :   type: "object",
+    :   values: {
+    :     id: { type: "id" },
+    :     loginToken: { type: "base64" },
+    :     apiToken: { type: "string" },
+    :   },
+    : }
   + 400, ~"Authorization wrong"~
   + 401, ~"Unauthorized"~
-  + 404
+  + 401, ~"User not found""~
 
 
 _Example:_
 #+BEGIN_SRC restclient :exports both
 :my-auth := (base64-encode-string "testname3@gmail.com:a123456" t)
 
-GET http://127.0.0.1:3000/v1/user/1/token
+GET http://127.0.0.1:3000/v1/user/token
 Content-Type: application/x-www-form-urlencoded
 Authorization: Basic :my-auth
 #+END_SRC
@@ -181,8 +194,20 @@ Authorization: Basic :my-auth
 // Connection: keep-alive
 // Request duration: 0.268833s
 #+END_SRC
+*** GET =/v1/user/apiToken=
 
-*** DELETE =/v1/user/:id=
+- Headers
+  - =Authorization= with =Bearer loginToken= 
+- Returns
+  + 200, 
+    : {
+    :   type: "string"
+    : }
+  + 400, ~"Authorization wrong"~
+  + 401, ~"Unauthorized"~
+  + 401, ~"User not found""~
+
+*** TODO DELETE =/v1/user/:id=
 
 - Path Parameters
   - ~int {id}~ :: Id of the user to be deleted
@@ -219,7 +244,7 @@ Authorization: Basic :my-auth
 // Request duration: 0.259496s
 #+END_SRC
 
-*** PUT =/v1/user/:id=
+*** TODO PUT =/v1/user/:id=
 
 - Path Parameters
   - ~int {id}~ :: Id of the user to be changed
@@ -264,7 +289,7 @@ name=dude&password=myPw1
 // Request duration: 0.259056s
 #+END_SRC
 
-*** POST =/v1/user/:email/reset=
+*** TODO PUT =/v1/user/:email/password=
 
 - Path Parameters
   - ~email {emial}~ :: Email of the user to be changed
@@ -296,6 +321,40 @@ Content-Type: application/x-www-form-urlencoded
 
 * Flows
 
+** Signup
+
+#+BEGIN_SRC plantuml :file signup.png :exports results
+skinparam roundcorner 5
+skinparam monochrome true
+skinparam shadowing false
+actor User
+
+group Signup
+User -> Loginservice : POST /v1/user
+activate Loginservice
+Loginservice -> Mailserver : send mail with token
+activate Mailserver
+User <-- Loginservice : "ok"
+deactivate Loginservice
+User <-- Mailserver : Mail with token
+deactivate Mailserver
+
+User -> Loginservice : /v1/user/:email/password [token]
+activate Loginservice
+User <-- Loginservice : "ok"
+deactivate Loginservice
+end
+
+group Login
+User -> Loginservice : /v1/user/token [PW]
+activate Loginservice
+User <-- Loginservice : JWT
+deactivate Loginservice
+end
+#+END_SRC
+
+#+RESULTS:
+[[file:signup.png]]
 ** Login and API-flow
 
 #+BEGIN_SRC plantuml :exports results :file login.png
@@ -305,14 +364,14 @@ skinparam monochrome true
 skinparam shadowing false
 
 group Login
-User -> Loginservice : login with PW
+User -> Loginservice : GET /v1/user/token [PW]
 activate Loginservice
-User <-- Loginservice : JWT
+User <-- Loginservice : { JWT, loginToken }
 deactivate Loginservice
 end
 
 group API request
-User -> API : api request with JWT
+User -> API : api request [JWT]
 activate API
 API --> User : response
 deactivate API
@@ -325,19 +384,19 @@ end
 
 group Refresh token
 
-... JWT ages  ...
+... JWT expire time reached  ...
 
-User -> API : api request with old JWT
-activate API
+User -> API : api request [stale JWT]
+Activate API
 User <--x API : 401
 deactivate API
 
-User -> Loginservice : refresh token
+User -> Loginservice : GET /v1/user/getAPIToken [loginToken]
 activate Loginservice
 User <-- Loginservice : JWT
 deactivate Loginservice
 
-User -> API : api request with new JWT
+User -> API : api request with [JWT]
 activate API
 API --> User : response
 deactivate API
@@ -380,37 +439,3 @@ deactivate Loginservice
 #+RESULTS:
 [[file:resetpw.png]]
 
-** Signup
-
-#+BEGIN_SRC plantuml :file signup.png :exports results
-skinparam roundcorner 5
-skinparam monochrome true
-skinparam shadowing false
-actor User
-
-group Signup
-User -> Loginservice : POST user with email
-activate Loginservice
-Loginservice -> Mailserver : send mail with token
-activate Mailserver
-User <-- Loginservice : "ok"
-deactivate Loginservice
-User <-- Mailserver : Mail with token
-deactivate Mailserver
-
-User -> Loginservice : Set PW [Token from mail]
-activate Loginservice
-User <-- Loginservice : "ok"
-deactivate Loginservice
-end
-
-group Login
-User -> Loginservice : login with PW
-activate Loginservice
-User <-- Loginservice : JWT
-deactivate Loginservice
-end
-#+END_SRC
-
-#+RESULTS:
-[[file:signup.png]]

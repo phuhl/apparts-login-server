@@ -1,9 +1,6 @@
-import Routes from './server/routes/user';
-import Model from './server/model/user';
-import { Errors } from './server/util/errors';
+import Routes from "./routes/user";
+import Model from "./model/user";
 
-
-
-const exp = { Routes: { User: Routes }, Models: { User: Model }, Errors };
+const exp = { Routes: { User: Routes }, Models: { User: Model } };
 
 module.exports = exp;

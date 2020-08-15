@@ -4,13 +4,15 @@
   "description": "Login and Signup for Web, Apps, Server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "testOne": "jest",
+    "test": "jest --watch",
+    "testCoverage": "jest --coverage",
     "serve": "node ./server/app.js",
     "setupDB": "node ./server/scripts/setup.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@ph-uhl.com:Apparts/apparts-login-server.git"
+    "url": "git@github.com:phuhl/apparts-login-server.git"
   },
   "keywords": [
     "apparts",
@@ -23,14 +25,29 @@
   "author": "Philipp Uhl",
   "license": "UNLICENSED",
   "dependencies": {
-    "bcrypt-nodejs": "0.0.3",
-    "express": "^4.16.4"
+    "@apparts/config": "^1.0.5",
+    "@apparts/db": "^2.0.0",
+    "@apparts/error": "^1.0.3",
+    "@apparts/logger": "^1.0.0",
+    "@apparts/model": "^3.0.1",
+    "@apparts/types": "^2.6.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.16.4",
+    "jest": "^26.4.0",
+    "pg": "^8.3.0",
+    "ramda": "^0.27.1",
+    "supertest": "^4.0.2"
   },
   "peerDependencies": {
-    "apparts-config": "git+ssh://git@ph-uhl.com:Apparts/apparts-config#semver:^1.0.0",
-    "apparts-error": "git+ssh://git@ph-uhl.com:Apparts/apparts-error#semver:^1.0.0",
-    "apparts-model": "git+ssh://git@ph-uhl.com:Apparts/apparts-model#semver:^2.0.0",
-    "apparts-types": "git+ssh://git@ph-uhl.com:Apparts/apparts-types#semver:^2.0.0"
+    "@apparts/config": "^1.0.5",
+    "@apparts/error": "^1.0.3",
+    "@apparts/types": "^2.6.1",
+    "@apparts/db": "^2.0.0",
+    "@apparts/model": "^3.0.0"
   },
   "optionalPeerDependencies": {
     "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"
