@@ -99,6 +99,20 @@ describe("getToken", () => {
     expect(response.statusCode).toBe(200);
     expect(checkType(response, "getToken")).toBeTruthy();
   });
+  test("Successfull login with wrongly cased email", async () => {
+    const [, User] = useUser(getPool());
+    const user = await new User().load({ email: "tester@test.de" });
+    const response = await request(app)
+      .get(url("user/login"))
+      .auth("teSTER@test.de", "a12345678");
+    expect(response.body).toMatchObject({
+      id: user.content.id,
+      loginToken: user.content.token,
+      apiToken: jwt("tester@test.de", user.content.id),
+    });
+    expect(response.statusCode).toBe(200);
+    expect(checkType(response, "getToken")).toBeTruthy();
+  });
 
   test("Extra infos in token", async () => {
     const [Users, User, NoUser] = useUser(getPool());
@@ -167,6 +181,11 @@ describe("getAPIToken", () => {
     expect(response.body).toBe(jwt("tester@test.de", user.content.id));
     expect(response.statusCode).toBe(200);
     expect(checkType(response, "getAPIToken")).toBeTruthy();
+  });
+  test("Call getAPIToken on invalid user", async () => {
+    const [, User] = useUser(getPool());
+    const user = new User({});
+    await expect(async () => await user.getAPIToken()).rejects.toThrow();
   });
 });
 

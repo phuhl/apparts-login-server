@@ -79,7 +79,7 @@ module.exports = (dbs) => {
       return await this._checkToken(token);
     }
 
-    async _checkPw(password = "") {
+    async _checkPw(password) {
       const matches = await bcrypt.compare(password, this.content.hash);
       if (matches) {
         return this;
@@ -101,6 +101,7 @@ module.exports = (dbs) => {
     genToken() {
       return new Promise((res, rej) => {
         crypto.randomBytes(UserSettings.tokenLength, (err, token) => {
+          /* istanbul ignore if */
           if (err) {
             throw "[User] Could not generate Token, E33" + err;
           } else {

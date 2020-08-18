@@ -107,6 +107,8 @@ const updateUser = (useUser) =>
       if (!password) {
         return new HttpError(400, "Nothing to update");
       }
+
+      /* istanbul ignore else */
       if (password) {
         await me.setPw(password);
         await me.genToken();
