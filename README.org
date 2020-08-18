@@ -170,9 +170,20 @@ returned.
 *** Update user: PUT =/v1/user/:id=
 
 Update the user. All extra info must be updated over custom written
-APIs.
+APIs. Checking the password for a special password policy must be done
+by overwriting the ~async setPw(password)~ function. An example for
+checking for a minimum password length:
+#+BEGIN_SRC js
+  async setPw(password) {
+    if (password.length <= 8) {
+      throw new HttpError(400, "Password too short");
+    }
 
-TODO: update email with verification email.
+    return await super.setPw(password);
+  }
+#+END_SRC
+
+*TODO:* update email with verification email.
 
 - Body Parameters
   - ~password {password}~ :: Optional, the new password
