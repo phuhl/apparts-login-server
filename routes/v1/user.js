@@ -105,37 +105,28 @@ const updateUser = (useUser) =>
   prepauthToken(
     useUser,
     {
-      params: {
-        id: { type: "id" },
-      },
       body: {
-        name: { type: "string", optional: true },
-        email: { type: "email", optional: true },
-        newpassword: { type: "password", optional: true },
         password: { type: "password", optional: true },
       },
     },
-    async function ({ dbs, body: { name, email, newpassword, password } }, me) {
+    async function ({ dbs, body: { password } }, me) {
       const [, , NoUser] = useUser(dbs);
 
-      if (!me.resetTokenUsed) {
-        await me.checkAuthPw(password);
-      } else {
-        me.content.tokenForReset = null;
-        await me.genToken();
+      if (me.resetTokenUsed) {
+        if (!password) {
+          return new HttpError(400, "Password required");
+        }
+        me.content.tokenforreset = null;
       }
 
-      if (!name && !email && !newpassword) {
-        return new HttpError(400, "nothing to update");
+      if (!password) {
+        return new HttpError(400, "Nothing to update");
       }
-      if (name) {
-        me.content.name = name;
-      }
-      if (newpassword) {
-        await me.setPw(newpassword);
+      if (password) {
+        await me.setPw(password);
         await me.genToken();
       }
-      if (email) {
+      /* if (email) {
         try {
           await new NoUser().loadNone({ email: email.toLowerCase() });
           me.content.email = email.toLowerCase();
@@ -146,12 +137,30 @@ const updateUser = (useUser) =>
             new HttpError(400, "Email exists already")
           );
         }
-      }
+      }*/
       await me.update();
-      return "ok";
-    },
-    { strap: true }
+      const apiToken = await me.getAPIToken();
+      return {
+        id: me.content.id,
+        loginToken: me.content.token,
+        apiToken,
+      };
+    }
   );
+updateUser.returns = [
+  { status: 400, error: "Nothing to update" },
+  { status: 400, error: "Password required" },
+  {
+    status: 200,
+    type: "object",
+    values: {
+      id: { type: "id" },
+      loginToken: { type: "base64" },
+      apiToken: { type: "string" },
+    },
+  },
+  ...prepauthPW.returns,
+];
 
 const resetPassword = (useUser, mail) =>
   preparator(

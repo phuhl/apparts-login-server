@@ -67,7 +67,7 @@ module.exports = (dbs) => {
         throw new HttpError(401);
       }
       if (this.content.tokenforreset) {
-        this.content.tokenforreset = "";
+        this.content.tokenforreset = null;
         this.resetTokenUsed = true;
         await this.update();
       }

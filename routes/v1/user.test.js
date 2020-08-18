@@ -328,6 +328,144 @@ describe("reset password", () => {
   });
 });
 
+describe("alter user", () => {
+  test("User does not exist", async () => {
+    const response = await request(app)
+      .put(url("user"))
+      .auth("doesnotexist@test.de", "a12345678");
+    expect(response.body).toMatchObject(error("User not found"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "updateUser")).toBeTruthy();
+  });
+  test("Empty email address", async () => {
+    const response = await request(app).put(url("user")).auth("", "a12345678");
+    expect(response.body).toMatchObject(error("Authorization wrong"));
+    expect(response.statusCode).toBe(400);
+    expect(checkType(response, "updateUser")).toBeTruthy();
+  });
+  test("Wrong auth", async () => {
+    const response = await request(app)
+      .put(url("user"))
+      .auth("tester@test.de", "aorsitenrstne");
+    expect(response.body).toMatchObject(error("Unauthorized"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "updateUser")).toBeTruthy();
+  });
+  test("Missing token", async () => {
+    const response = await request(app)
+      .put(url("user"))
+      .auth("tester@test.de", "");
+    expect(response.body).toMatchObject(error("Authorization wrong"));
+    expect(response.statusCode).toBe(400);
+    expect(checkType(response, "updateUser")).toBeTruthy();
+  });
+  test("Alter password with loginToken", async () => {
+    const [, User] = useUser(getPool());
+    const user = await new User().load({ email: "tester@test.de" });
+    const response = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "a12345678");
+    expect(response.body).toMatchObject({
+      id: user.content.id,
+      loginToken: user.content.token,
+      apiToken: jwt("tester@test.de", user.content.id),
+    });
+    const response2 = await request(app)
+      .put(url("user"))
+      .auth("tester@test.de", user.content.token)
+      .send({ password: "jkl123a9a##" });
+    expect(response2.statusCode).toBe(200);
+    const usernew = await new User().load({ email: "tester@test.de" });
+    expect(usernew.content.token === user.content.token).toBeFalsy();
+    expect(response2.body).toMatchObject({
+      id: user.content.id,
+      loginToken: usernew.content.token,
+      apiToken: jwt("tester@test.de", user.content.id),
+    });
+    const response3 = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "a12345678");
+    expect(response3.statusCode).toBe(401);
+    const response4 = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "jkl123a9a##");
+    expect(response4.body).toMatchObject({
+      id: user.content.id,
+      loginToken: usernew.content.token,
+      apiToken: jwt("tester@test.de", user.content.id),
+    });
+
+    expect(checkType(response2, "updateUser")).toBeTruthy();
+  });
+  test("Alter password with resetToken", async () => {
+    const [, User] = useUser(getPool());
+    const response = await request(app).post(url("user/tester@test.de/reset"));
+    const user = await new User().load({ email: "tester@test.de" });
+    const response2 = await request(app)
+      .put(url("user"))
+      .auth("tester@test.de", user.content.tokenforreset)
+      .send({ password: "?aoRisetn39!!" });
+    expect(response2.statusCode).toBe(200);
+    const usernew = await new User().load({ email: "tester@test.de" });
+    expect(usernew.content.token === user.content.token).toBeFalsy();
+    expect(response2.body).toMatchObject({
+      id: user.content.id,
+      loginToken: usernew.content.token,
+      apiToken: jwt("tester@test.de", user.content.id),
+    });
+    const response3 = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "jkl123a9a##");
+    expect(response3.statusCode).toBe(401);
+    const response4 = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "?aoRisetn39!!");
+    expect(response4.body).toMatchObject({
+      id: user.content.id,
+      loginToken: usernew.content.token,
+      apiToken: jwt("tester@test.de", user.content.id),
+    });
+
+    expect(checkType(response2, "updateUser")).toBeTruthy();
+  });
+  test("Don't alter anything", async () => {
+    const [, User] = useUser(getPool());
+    const user = await new User().load({ email: "tester@test.de" });
+    const response2 = await request(app)
+      .put(url("user"))
+      .auth("tester@test.de", user.content.token)
+      .send({});
+    expect(response2.statusCode).toBe(400);
+    expect(response2.body).toMatchObject({
+      error: "Nothing to update",
+    });
+    const usernew = await new User().load({ email: "tester@test.de" });
+    expect(usernew.content).toMatchObject(user.content);
+
+    expect(checkType(response2, "updateUser")).toBeTruthy();
+  });
+  test("Omit password on pw reset", async () => {
+    const [, User] = useUser(getPool());
+    const response = await request(app).post(url("user/tester@test.de/reset"));
+    const user = await new User().load({ email: "tester@test.de" });
+    const response2 = await request(app)
+      .put(url("user"))
+      .auth("tester@test.de", user.content.tokenforreset)
+      .send({});
+    expect(response2.statusCode).toBe(400);
+    expect(response2.body).toMatchObject({
+      error: "Password required",
+    });
+    const usernew = await new User().load({ email: "tester@test.de" });
+    expect(usernew.content).toMatchObject({
+      ...user.content,
+      tokenforreset: null,
+    });
+
+    expect(checkType(response2, "updateUser")).toBeTruthy();
+  });
+});
+
 describe("All possible responses tested", () => {
   test("", () => {
     expect(allChecked("getToken")).toBeTruthy();
@@ -335,5 +473,6 @@ describe("All possible responses tested", () => {
     expect(allChecked("addUser")).toBeTruthy();
     expect(allChecked("getUser")).toBeTruthy();
     expect(allChecked("resetPassword")).toBeTruthy();
+    expect(allChecked("updateUser")).toBeTruthy();
   });
 });

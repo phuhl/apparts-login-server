@@ -45,9 +45,6 @@ They are:
 - ~pwHashRounds {int}~ :: Amount of hash-rounds for password
      storing, passend on to =bcrypt=
 - ~tokenLength {int}~ :: Length of login-token
-- ~nameLengthMin {int}~ :: The minimum length for the username
-- ~pwLengthMin {int}~ :: The minimum length for the password
-- ~supportedLanguages {[string]}~ :: List of supported languages
 - ~welcomeMail {object}~ :: The object should have keys ~title~ and
   ~body~. Within both, all occurrences of the string "##NAME##" will
   be replaced with the users name. In the body, all occurences of the
@@ -125,36 +122,6 @@ containing a link for verifying the email. This link contains a token
 that can be used for the reset password API and thus can be used to
 set the password.
 
-_Example:_
-#+BEGIN_SRC restclient :exports both
-:uname = testname3
-:email = testname3@gmail.com
-:pw = a123456
-
-POST http://127.0.0.1:3000/v1/user/
-Content-Type: application/x-www-form-urlencoded
-name=:uname&email=:email&password=:pw
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC js
-{
-  "id": 21,
-  "token": "sTrw72s8DtMbdHzSdT11sivW/0vjFkKy1FFpJkdzr2c="
-}
-// POST http://127.0.0.1:3000/v1/user/
-// HTTP/1.1 200 OK
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 64
-// ETag: W/"40-jhUPKq+D+iLyBAe1Xe3oODIv654"
-// Date: Tue, 12 Feb 2019 16:00:34 GMT
-// Connection: keep-alive
-// Request duration: 0.272916s
-#+END_SRC
-
 *** Get user info: GET =/v1/user=
 
 Returns the user info. All values that are set to public (see
@@ -187,34 +154,6 @@ returned.
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-
-_Example:_
-#+BEGIN_SRC restclient :exports both
-:my-auth := (base64-encode-string "testname3@gmail.com:a123456" t)
-
-GET http://127.0.0.1:3000/v1/user/token
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic :my-auth
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC js
-{
-  "id": 20,
-  "token": "0mK3qRBqyuHGcrxghZRXGbynLlx6LDxr5+TT0FJOJv0="
-}
-// GET http://127.0.0.1:3000/v1/user/1/token
-// HTTP/1.1 200 OK
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 64
-// ETag: W/"40-zxDI4x20J1VZXlBxXXI+Yyu6458"
-// Date: Tue, 12 Feb 2019 15:55:47 GMT
-// Connection: keep-alive
-// Request duration: 0.268833s
-#+END_SRC
 *** Refresh API Token: GET =/v1/user/apiToken=
 
 - Headers
@@ -228,50 +167,33 @@ Authorization: Basic :my-auth
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-*** TODO PUT =/v1/user/:id=
+*** Update user: PUT =/v1/user/:id=
 
-- Path Parameters
-  - ~int {id}~ :: Id of the user to be changed
+Update the user. All extra info must be updated over custom written
+APIs.
+
+TODO: update email with verification email.
+
 - Body Parameters
-  - ~name {string}~ :: Optional, new name of the user
-  - ~email {email}~ :: Optional, new email of the user
-  - ~newpassword {password}~ :: Optional, new password of the user
-  - ~password {password}~ :: Optional, old password of the user,
-       *required if not using a passwort-reset token*
+  - ~password {password}~ :: Optional, the new password
 - Headers
-  - =Authorization= with =Basic= base64(username:token)
+  - =Authorization= with =Basic= base64(username:token).
+    - Token can either be the ~loginToken~ or a ~tokenforreset~
 - Returns
-  + ~"ok"~
-  + 400, ~"nothing to update"~
-  + 400, ~"Email exists already"~
+  + 200, 
+    : {
+    :   type: "object",
+    :   values: {
+    :     id: { type: "id" },
+    :     loginToken: { type: "base64" },
+    :     apiToken: { type: "string" },
+    :   },
+    : }
   + 400, ~"Authorization wrong"~
+  + 400, ~"Nothing to update"~
+  + 400, ~"Password required"~
   + 401, ~"Unauthorized"~
-
-_Example:_
-#+BEGIN_SRC restclient :exports both
-:my-auth := (base64-encode-string "test@web.de:FcvsslFITxgPyszUy80NDee+WOTE7xdn1zASyDwdx90=" t)
-
-PUT http://127.0.0.1:3001/v1/user/20
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic :my-auth
-name=dude&password=myPw1
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC js
-"ok"
-// PUT http://127.0.0.1:3001/v1/user/20
-// HTTP/1.1 200 OK
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 4
-// ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
-// Date: Wed, 13 Feb 2019 15:36:32 GMT
-// Connection: keep-alive
-// Request duration: 0.259056s
-#+END_SRC
+  + 401, ~"User not found""~
 
 *** Request password reset: POST =/v1/user/:email/password=
 
