@@ -7,5 +7,10 @@
   "apiToken": {
     "webtokenkey": "AotyUwtiedt20923oaristN##AST0I.a.x./asrtu",
     "expireTime": "10 minutes"
-  }
+  },
+  "welcomeMail": {
+    "title": "Willkommen",
+    "body": "Bitte bestätige deine Email: ##URL##"
+  },
+  "resetUrl": "https://apparts.com/reset"
 }

@@ -8,6 +8,8 @@ const UserSettings = require("@apparts/config").get("login-config");
 const JWT = require("jsonwebtoken");
 const {
   apiToken: { webtokenkey, expireTime },
+  welcomeMail,
+  resetUrl,
 } = UserSettings;
 module.exports = (dbs) => {
   const [Users, _User, NoUser] = useModel(
@@ -26,6 +28,23 @@ module.exports = (dbs) => {
   class User extends _User {
     constructor(content) {
       super(content);
+    }
+
+    async setExtra() {}
+
+    getWelcomeMail() {
+      return {
+        title: welcomeMail.title, // .replace(/##NAME##/g, name),
+        body: welcomeMail.body
+          //          .replace(/##NAME##/g, name)
+          .replace(
+            /##URL##/g,
+            resetUrl +
+              `?token=${encodeURIComponent(
+                this.content.tokenforreset
+              )}&welcome=true`
+          ),
+      };
     }
 
     async _checkToken(token) {

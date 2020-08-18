@@ -1,60 +1,39 @@
 "use strict";
 
-const router = require("express").Router();
 const { preparator, prepauthPW, prepauthToken } = require("@apparts/types");
-const AUTH_CONFIG = require("@apparts/config").get("login-config");
 const { HttpError, exceptionTo, catchException } = require("@apparts/error");
 const { NotUnique, NotFound, DoesExist } = require("@apparts/model");
+const UserSettings = require("@apparts/config").get("login-config");
 
 const addUser = (useUser, mail) =>
   preparator(
     {
       body: {
-        name: { type: "string" },
         email: { type: "email" },
-        lang: { type: "string" },
+        ...UserSettings.extraTypes,
       },
     },
-    async function ({ dbs, body: { name, email, lang } }) {
+    async ({ dbs, body: { email, ...extra } }, req) => {
       const [, User] = useUser(dbs);
-
-      if (name.length < AUTH_CONFIG.nameLengthMin) {
-        return new HttpError(400, "name to short");
-      }
-      if (name.length < AUTH_CONFIG.nameLengthMin) {
-        return new HttpError(400, "pw to short");
-      }
-      if (AUTH_CONFIG.supportedLanguages.indexOf(lang) === -1) {
-        return new HttpError(400, "lang not supported");
-      }
       const me = new User({
-        name,
         email: email.toLowerCase(),
-        language: lang,
-        createdOn: new Date().getTime(),
       });
+      await me.setExtra(extra);
       await me.genResetToken();
       try {
         await me.store();
       } catch (e) {
         return exceptionTo(DoesExist, e, new HttpError(413, "User exists"));
       }
-      await mail.sendMail(
-        email,
-        AUTH_CONFIG.welcomeMail.body
-          .replace(/##NAME##/g, name)
-          .replace(
-            /##URL##/g,
-            AUTH_CONFIG.resetUrl +
-              `?token=${encodeURIComponent(
-                me.content.tokenForReset
-              )}&welcome=true`
-          ),
-        AUTH_CONFIG.welcomeMail.title.replace(/##NAME##/g, name)
-      );
-      return { id: me.content.id, token: me.content.token };
+      const { title, body } = me.getWelcomeMail();
+      await mail.sendMail(email, body, title);
+      return "ok";
     }
   );
+addUser.returns = [
+  { status: 200, value: "ok" },
+  { status: 413, error: "User exists" },
+];
 
 const getUser = (useUser) =>
   prepauthToken(
@@ -131,7 +110,8 @@ const deleteUser = (useUser) =>
 
 const updateUser = (useUser) =>
   prepauthToken(
-    useUser,    {
+    useUser,
+    {
       params: {
         id: { type: "id" },
       },

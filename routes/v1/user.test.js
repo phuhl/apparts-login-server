@@ -2,7 +2,7 @@ const request = require("supertest");
 const {
   checkType,
   allChecked,
-  app,
+  app: _app,
   url,
   error,
   getPool,
@@ -14,6 +14,8 @@ const {
 );
 
 const useUser = require("../../model/user.js");
+const mailObj = {};
+const app = _app(useUser, mailObj);
 
 const {
   apiToken: { webtokenkey, expireTime },
@@ -36,9 +38,12 @@ beforeEach(() => {
   dateNowAll = jest
     .spyOn(Date, "now")
     .mockImplementation(() => 1575158400000 + 1000 * 60 * 60 * 9.7);
+  const mailMock = jest.fn();
+  mailObj.sendMail = mailMock;
 });
 afterEach(() => {
   dateNowAll.mockRestore();
+  mailObj.sendMail.mockRestore();
 });
 
 describe("getToken", () => {
@@ -96,17 +101,24 @@ describe("getToken", () => {
   });
 
   test("Extra infos in token", async () => {
-    const [, User] = useUser(getPool());
+    const [Users, User, NoUser] = useUser(getPool());
 
     class User1 extends User {
       getExtraAPITokenContent() {
         return { tada: 4 };
       }
     }
-
-    const user = await new User1().load({ email: "tester@test.de" });
-    const token = await user.getAPIToken();
-    expect(token).toBe(jwt("tester@test.de", user.content.id, { tada: 4 }));
+    const user = await new User().load({ email: "tester@test.de" });
+    const response = await request(_app(() => [Users, User1, NoUser]))
+      .get(url("user/login"))
+      .auth("tester@test.de", "a12345678");
+    expect(response.body).toMatchObject({
+      id: user.content.id,
+      loginToken: user.content.token,
+      apiToken: jwt("tester@test.de", user.content.id, { tada: 4 }),
+    });
+    expect(response.statusCode).toBe(200);
+    expect(checkType(response, "getToken")).toBeTruthy();
   });
 });
 
@@ -158,9 +170,97 @@ describe("getAPIToken", () => {
   });
 });
 
+describe("signup", () => {
+  test("User exists already", async () => {
+    const response = await request(app).post(url("user")).send({
+      email: "tester@test.de",
+    });
+    expect(response.body).toMatchObject(error("User exists"));
+    expect(response.statusCode).toBe(413);
+    expect(checkType(response, "addUser")).toBeTruthy();
+  });
+  test("email invalid", async () => {
+    const response = await request(app).post(url("user")).send({
+      email: "tester@test",
+    });
+    expect(response.body).toMatchObject({
+      error: "Fieldmissmatch",
+      field: "body",
+      message: { email: "expected email" },
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  test("Success", async () => {
+    const [, User] = useUser(getPool());
+    const response = await request(app).post(url("user")).send({
+      email: "newuser@test.de",
+    });
+    expect(response.body).toBe("ok");
+    expect(response.statusCode).toBe(200);
+    expect(checkType(response, "addUser")).toBeTruthy();
+    const user = await new User().load({ email: "newuser@test.de" });
+    expect(user.content.email).toBe("newuser@test.de");
+    expect(user.content.createdon).toBe(1575158400000 + 1000 * 60 * 60 * 9.7);
+    expect(user.content.token).toBeTruthy();
+    expect(user.content.tokenforreset).toBeTruthy();
+
+    expect(mailObj.sendMail.mock.calls.length).toBe(1);
+    expect(mailObj.sendMail.mock.calls[0][0]).toBe("newuser@test.de");
+    expect(mailObj.sendMail.mock.calls[0][1]).toBe(
+      `Bitte bestätige deine Email: https://apparts.com/reset?token=${encodeURIComponent(
+        user.content.tokenforreset
+      )}&welcome=true`
+    );
+    expect(mailObj.sendMail.mock.calls[0][2]).toBe("Willkommen");
+  });
+  test("Success with extra data", async () => {
+    const [Users, User, NoUser] = useUser(getPool());
+
+    const mockFn = jest.fn();
+
+    class User1 extends User {
+      setExtra(extra) {
+        mockFn(extra);
+      }
+    }
+    const response = await request(_app(() => [Users, User1, NoUser], mailObj))
+      .post(url("user"))
+      .send({
+        email: "newuser2@test.de",
+        a: 3,
+        b: false,
+        c: [4, 6],
+      });
+    expect(response.body).toBe("ok");
+    expect(response.statusCode).toBe(200);
+    expect(checkType(response, "addUser")).toBeTruthy();
+    const user = await new User().load({ email: "newuser2@test.de" });
+    expect(user.content.email).toBe("newuser2@test.de");
+    expect(user.content.createdon).toBe(1575158400000 + 1000 * 60 * 60 * 9.7);
+    expect(user.content.token).toBeTruthy();
+    expect(user.content.tokenforreset).toBeTruthy();
+    expect(mockFn.mock.calls.length).toBe(1);
+    expect(mockFn.mock.calls[0][0]).toMatchObject({
+      a: 3,
+      b: false,
+      c: [4, 6],
+    });
+
+    expect(mailObj.sendMail.mock.calls.length).toBe(1);
+    expect(mailObj.sendMail.mock.calls[0][0]).toBe("newuser2@test.de");
+    expect(mailObj.sendMail.mock.calls[0][1]).toBe(
+      `Bitte bestätige deine Email: https://apparts.com/reset?token=${encodeURIComponent(
+        user.content.tokenforreset
+      )}&welcome=true`
+    );
+    expect(mailObj.sendMail.mock.calls[0][2]).toBe("Willkommen");
+  });
+});
+
 describe("All possible responses tested", () => {
   test("", () => {
     expect(allChecked("getToken")).toBeTruthy();
     expect(allChecked("getAPIToken")).toBeTruthy();
+    expect(allChecked("addUser")).toBeTruthy();
   });
 });

@@ -6,9 +6,7 @@ const applyMiddleware = require("./middleware");
 const addRoutes = require("./routes");
 const express = require("express");
 
-const useUser = require("./model/user");
-
-module.exports = (DB_CONFIG) => {
+module.exports = (DB_CONFIG) => (useUser, mail) => {
   const app = express();
   app.use((req, res, next) => {
     req.headers = {
@@ -30,9 +28,7 @@ module.exports = (DB_CONFIG) => {
   });
 
   applyMiddleware(app, DB_CONFIG, true);
-  addRoutes(app, useUser, (...ps) => {
-    console.log("mail", ...ps);
-  });
+  addRoutes(app, useUser, mail);
   return app;
 };
 

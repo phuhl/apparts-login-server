@@ -63,6 +63,52 @@ They are:
   - ~token {string}~ :: An auth token
   - ~?welcome {bool}~ :: Set to true, if this is not from a password
     reset mail, but from a welcome mail.
+- ~extraTypes {?object}~ :: An optional object that contains type
+  definitions as expected by the preperator of @apparts/types. Will be
+  injected into the ~body~-type definitions of ~POST /v/1/user~ and
+  can be used to validate extra parameters on user creation. These
+  extra parameters will be passed to the ~setExtra~ function (see
+  [[Overwriting the User-model]]).
+
+*** Overwriting the User-model
+
+The user model can be overwritten to provide extra functionality. For
+more information on how to overwrite functions of the user model, see
+the documentation of [[https://github.com/phuhl/apparts-model#usage][@apparts/model]]. All of these functions are only
+called on the OneModel of the user, thus only the ~User~ has to be
+extended, not the ~Users~ or ~NoUser~ classes. The functions,
+explicitly intended for overwriting:
+
+- ~getWelcomeMail() {object}~ :: Returns the content of a welcome
+  email that is send after registration. The function returns an
+  object of the form ~{ title: {string}, body: {string}}~. The
+  function can access ~this.content~. It's content should contain a
+  link with the reset token. Default implementation:
+  #+BEGIN_SRC js
+    getWelcomeMail() {
+      return {
+        title: welcomeMail.title,
+        body: welcomeMail.body
+          .replace(
+            /##URL##/g,
+            resetUrl +
+              `?token=${encodeURIComponent(
+                    this.content.tokenforreset
+                  )}&welcome=true`
+          ),
+      };
+    }
+  #+END_SRC
+- ~async setExtra(extraParams) {void}~ :: This function is called on
+  user creation. It receives as parameter all the body parameters
+  (except for ~email~) that where present on the call of ~POST
+  /v/1/user~. It can set the values into ~this.content~. The content
+  will be saved afterwards automatically. To validate the types of the
+  values, you also can configure ~extraTypes~ (see [[Configuration]]).
+- ~async getExtraAPITokenContent() {?object} ~ :: This function can be
+  used to inject extra information into the APIToken. Useful for
+  providing a JWT that contains all necessary information for the API
+  and thus reducing the amount of database calls.
 
 ** Provided REST-API
 
