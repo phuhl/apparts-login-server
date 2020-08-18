@@ -42,7 +42,7 @@ module.exports = (dbs) => {
             resetUrl +
               `?token=${encodeURIComponent(
                 this.content.tokenforreset
-              )}&welcome=true`
+              )}&email=${encodeURIComponent(this.content.email)}&welcome=true`
           ),
       };
     }

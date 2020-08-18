@@ -209,7 +209,7 @@ describe("signup", () => {
     expect(mailObj.sendMail.mock.calls[0][1]).toBe(
       `Bitte bestätige deine Email: https://apparts.com/reset?token=${encodeURIComponent(
         user.content.tokenforreset
-      )}&welcome=true`
+      )}&email=newuser%40test.de&welcome=true`
     );
     expect(mailObj.sendMail.mock.calls[0][2]).toBe("Willkommen");
   });
@@ -251,7 +251,7 @@ describe("signup", () => {
     expect(mailObj.sendMail.mock.calls[0][1]).toBe(
       `Bitte bestätige deine Email: https://apparts.com/reset?token=${encodeURIComponent(
         user.content.tokenforreset
-      )}&welcome=true`
+      )}&email=newuser2%40test.de&welcome=true`
     );
     expect(mailObj.sendMail.mock.calls[0][2]).toBe("Willkommen");
   });

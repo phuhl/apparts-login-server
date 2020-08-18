@@ -93,8 +93,8 @@ explicitly intended for overwriting:
             /##URL##/g,
             resetUrl +
               `?token=${encodeURIComponent(
-                    this.content.tokenforreset
-                  )}&welcome=true`
+                this.content.tokenforreset
+              )}&email=${encodeURIComponent(this.content.email)}&welcome=true`
           ),
       };
     }
@@ -112,17 +112,18 @@ explicitly intended for overwriting:
 
 ** Provided REST-API
 
-*** TODO POST =/v1/user/=
+*** Create a user: POST =/v1/user/=
 
 - Body Parameters
-  - ~name {string}~ :: Username
   - ~email {email}~ :: Email
-  - ~password {password}~ :: Password
 - Returns
-  + ~{ id: {id}, token: {token}}~
-  + 400, ~"name to short"~
-  + 400, ~"pw to short"~
-  + 400, ~"Username taken"~
+  + 200, ~"ok"~
+  + 413, ~"User exists"~
+
+After successfully calling this API, an email will be send to ~email~,
+containing a link for verifying the email. This link contains a token
+that can be used for the reset password API and thus can be used to
+set the password.
 
 _Example:_
 #+BEGIN_SRC restclient :exports both
@@ -154,7 +155,7 @@ name=:uname&email=:email&password=:pw
 // Request duration: 0.272916s
 #+END_SRC
 
-*** TODO GET =/v1/user/:id=
+*** TODO GET =/v1/user=
 
 - Path Parameters
   - ~int {id}~ :: Id of the user to be returned
@@ -194,7 +195,7 @@ Authorization: Basic :my-auth
 // Request duration: 0.007437s
 #+END_SRC
 
-*** GET =/v1/user/token=
+*** Login: GET =/v1/user/token=
 
 - Headers
   - =Authorization= with =Basic= base64(username:password)
@@ -240,7 +241,7 @@ Authorization: Basic :my-auth
 // Connection: keep-alive
 // Request duration: 0.268833s
 #+END_SRC
-*** GET =/v1/user/apiToken=
+*** Refresh API Token: GET =/v1/user/apiToken=
 
 - Headers
   - =Authorization= with =Bearer loginToken= 
@@ -376,25 +377,18 @@ skinparam shadowing false
 actor User
 
 group Signup
-User -> Loginservice : POST /v1/user
+User -> Loginservice : POST /v/1/user
 activate Loginservice
-Loginservice -> Mailserver : send mail with token
+Loginservice -> Mailserver : Send mail with token
 activate Mailserver
 User <-- Loginservice : "ok"
 deactivate Loginservice
 User <-- Mailserver : Mail with token
 deactivate Mailserver
 
-User -> Loginservice : /v1/user/:email/password [token]
+User -> Loginservice : PUT /v/1/user/:email [token]
 activate Loginservice
-User <-- Loginservice : "ok"
-deactivate Loginservice
-end
-
-group Login
-User -> Loginservice : /v1/user/token [PW]
-activate Loginservice
-User <-- Loginservice : JWT
+User <-- Loginservice : { JWT, loginToken }
 deactivate Loginservice
 end
 #+END_SRC
@@ -461,12 +455,12 @@ skinparam roundcorner 5
 skinparam monochrome true
 skinparam shadowing false
 
-User -> Loginservice : Login with wrong PW
+User -> Loginservice : GET /v1/user/token [wrong PW]
 activate Loginservice
 User <--x Loginservice : 401
 deactivate Loginservice
 
-User -> Loginservice : resetPassword
+User -> Loginservice : POST /v/1/user/:email/reset
 activate Loginservice
 Loginservice -> Mailserver : Send mail with token
 activate Mailserver
@@ -475,9 +469,9 @@ deactivate Loginservice
 User <-- Mailserver : Mail with token
 deactivate Mailserver
 
-User -> Loginservice : Reset PW [Token from mail]
+User -> Loginservice : PUT /v/1/user/:email [token]
 activate Loginservice
-User <-- Loginservice : "ok"
+User <-- Loginservice : { JWT, loginToken }
 deactivate Loginservice
 
 #+END_SRC
