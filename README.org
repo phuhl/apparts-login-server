@@ -96,16 +96,38 @@ explicitly intended for overwriting:
       };
     }
   #+END_SRC
+- ~getResetPWMail() {object}~ :: Returns the content of a reset
+  password email. The function returns an object of the form ~{ title:
+  {string}, body: {string}}~. The function can access
+  ~this.content~. It's content should contain a link with the reset
+  token. Default implementation:
+  #+BEGIN_SRC js
+    getResetPWMail() {
+      return {
+        title: resetMail.title,
+        body: resetMail.body.replace(
+          /##URL##/g,
+          resetUrl +
+            `?token=${encodeURIComponent(
+                  this.content.tokenforreset
+                )}&email=${encodeURIComponent(this.content.email)}`
+        ),
+      };
+    }
+  #+END_SRC
 - ~async setExtra(extraParams) {void}~ :: This function is called on
   user creation. It receives as parameter all the body parameters
   (except for ~email~) that where present on the call of ~POST
   /v/1/user~. It can set the values into ~this.content~. The content
   will be saved afterwards automatically. To validate the types of the
   values, you also can configure ~extraTypes~ (see [[Configuration]]).
-- ~async getExtraAPITokenContent() {?object} ~ :: This function can be
+- ~async getExtraAPITokenContent() {?object}~ :: This function can be
   used to inject extra information into the APIToken. Useful for
   providing a JWT that contains all necessary information for the API
   and thus reducing the amount of database calls.
+- ~async deleteMe() {void}~ :: This function can be overwritten to
+  perform the necessary actions on deletion. Call the super function
+  when overwriting!
 
 ** Provided REST-API
 
@@ -214,42 +236,23 @@ checking for a minimum password length:
   + 200, ~"ok"~
   + 404, ~"User not found"~
 
-*** TODO DELETE =/v1/user/:id=
+*** Delete a user: DELETE =/v1/user=
 
-- Path Parameters
-  - ~int {id}~ :: Id of the user to be deleted
+This function *does not* delete the user. It only disables access to
+the login server API in any way. To the outside it should not be
+visible, if the user is disabled or non-existing. To delete a user,
+overwrite the ~async deleteMe() {void}~ (see [[Overwriting the
+User-model]]) function of the User object. The reason for this is, that
+the use of foreign keys in databases might be disturbed by deleting
+the entity from the database.
+
 - Headers
   - =Authorization= with =Basic= base64(username:password)
 - Returns
-  + ~"ok"~
+  + 200, ~"ok"~
   + 400, ~"Authorization wrong"~
   + 401, ~"Unauthorized"~
-  + 404, ~"User not found"~
-
-_Example:_
-#+BEGIN_SRC restclient :exports both
-:my-auth := (base64-encode-string "testname1@gmail.com:a123456" t)
-
-DELETE http://127.0.0.1:3000/v1/user/17
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic :my-auth
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC js
-"ok"
-// DELETE http://127.0.0.1:3000/v1/user/17
-// HTTP/1.1 200 OK
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 4
-// ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
-// Date: Tue, 12 Feb 2019 15:59:24 GMT
-// Connection: keep-alive
-// Request duration: 0.259496s
-#+END_SRC
+  + 401, ~"User not found""~
 
 * Flows
 

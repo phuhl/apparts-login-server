@@ -80,26 +80,11 @@ getAPIToken.returns = [
 ];
 
 const deleteUser = (useUser) =>
-  prepauthPW(
-    useUser,
-    {
-      params: {
-        id: { type: "id" },
-      },
-    },
-    async function ({ params: { id } }, me) {
-      if (id !== me.content.id) {
-        return new HttpError(401);
-      }
-
-      try {
-        await me.delete();
-      } catch (e) {
-        return exceptionTo(NotFound, e, HttpError.notFound("user"));
-      }
-      return "ok";
-    }
-  );
+  prepauthPW(useUser, {}, async function (_, me) {
+    await me.deleteMe();
+    return "ok";
+  });
+deleteUser.returns = [{ status: 200, value: "ok" }, ...prepauthPW.returns];
 
 const updateUser = (useUser) =>
   prepauthToken(
@@ -174,7 +159,7 @@ const resetPassword = (useUser, mail) =>
 
       const me = new User();
       try {
-        await me.load({ email: email.toLowerCase() });
+        await me.load({ email: email.toLowerCase(), deleted: false });
       } catch (e) {
         return exceptionTo(NotFound, e, HttpError.notFound("User"));
       }

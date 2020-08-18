@@ -466,6 +466,73 @@ describe("alter user", () => {
   });
 });
 
+describe("delete user", () => {
+  test("User does not exist", async () => {
+    const response = await request(app)
+      .del(url("user"))
+      .auth("doesnotexist@test.de", "a12345678");
+    expect(response.body).toMatchObject(error("User not found"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "deleteUser")).toBeTruthy();
+  });
+  test("Empty email address", async () => {
+    const response = await request(app).del(url("user")).auth("", "a12345678");
+    expect(response.body).toMatchObject(error("Authorization wrong"));
+    expect(response.statusCode).toBe(400);
+    expect(checkType(response, "deleteUser")).toBeTruthy();
+  });
+  test("Wrong auth", async () => {
+    const response = await request(app)
+      .del(url("user"))
+      .auth("tester@test.de", "aorsitenrstne");
+    expect(response.body).toMatchObject(error("Unauthorized"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "deleteUser")).toBeTruthy();
+  });
+  test("Missing token", async () => {
+    const response = await request(app)
+      .del(url("user"))
+      .auth("tester@test.de", "");
+    expect(response.body).toMatchObject(error("Authorization wrong"));
+    expect(response.statusCode).toBe(400);
+    expect(checkType(response, "deleteUser")).toBeTruthy();
+  });
+  test("Token login", async () => {
+    const [, User] = useUser(getPool());
+    const user = await new User().load({ email: "tester@test.de" });
+    const response = await request(app)
+      .del(url("user"))
+      .auth("tester@test.de", user.content.token);
+    expect(response.body).toMatchObject(error("Unauthorized"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "deleteUser")).toBeTruthy();
+  });
+  test("Delete user", async () => {
+    const [, User, NoUser] = useUser(getPool());
+    const user = await new User().load({ email: "tester@test.de" });
+
+    const response1 = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "?aoRisetn39!!");
+    expect(response1.statusCode).toBe(200);
+    const response = await request(app)
+      .del(url("user"))
+      .auth("tester@test.de", "?aoRisetn39!!");
+    expect(response.body).toBe("ok");
+    const response3 = await request(app)
+      .get(url("user/login"))
+      .auth("tester@test.de", "?aoRisetn39!!");
+    expect(response3.body).toMatchObject(error("User not found"));
+    expect(response3.statusCode).toBe(401);
+
+    const response4 = await request(app).post(url("user/tester@test.de/reset"));
+    expect(response4.body).toMatchObject(error("User not found"));
+    expect(response4.statusCode).toBe(404);
+
+    expect(checkType(response, "deleteUser")).toBeTruthy();
+  });
+});
+
 describe("All possible responses tested", () => {
   test("", () => {
     expect(allChecked("getToken")).toBeTruthy();
@@ -474,5 +541,6 @@ describe("All possible responses tested", () => {
     expect(allChecked("getUser")).toBeTruthy();
     expect(allChecked("resetPassword")).toBeTruthy();
     expect(allChecked("updateUser")).toBeTruthy();
+    expect(allChecked("deleteUser")).toBeTruthy();
   });
 });

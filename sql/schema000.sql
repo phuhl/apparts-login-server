@@ -5,6 +5,7 @@ CREATE TABLE users (
        token VARCHAR(64),
        tokenForReset VARCHAR(64),
        hash CHAR(60),
+       deleted BOOL NOT NULL,
        createdOn BIGINT NOT NULL
 );
 

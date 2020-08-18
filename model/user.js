@@ -21,6 +21,7 @@ module.exports = (dbs) => {
       token: { type: "base64" },
       tokenforreset: { type: "base64", optional: true },
       hash: { type: "/", optional: true },
+      deleted: { type: "bool", default: false },
       createdon: { type: "time", default: () => Date.now(), public: true },
     },
     "users"
@@ -136,6 +137,13 @@ module.exports = (dbs) => {
         ...extra,
       };
       return await JWT.sign(payload, webtokenkey, { expiresIn: expireTime });
+    }
+
+    async deleteMe() {
+      this.content.token = null;
+      this.content.tokenforreset = null;
+      this.content.deleted = true;
+      this.update();
     }
   }
 
