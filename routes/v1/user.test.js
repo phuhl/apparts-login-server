@@ -296,11 +296,44 @@ describe("get user", () => {
   });
 });
 
+describe("reset password", () => {
+  test("User does not exist", async () => {
+    const response = await request(app).post(
+      url("user/doesnotexist@test.de/reset")
+    );
+    expect(response.body).toMatchObject(error("User not found"));
+    expect(response.statusCode).toBe(404);
+    expect(checkType(response, "resetPassword")).toBeTruthy();
+  });
+  test("Success", async () => {
+    const [, User] = useUser(getPool());
+    const userOld = await new User().load({ email: "tester@test.de" });
+
+    const response = await request(app).post(url("user/tester@test.de/reset"));
+    expect(response.body).toBe("ok");
+    expect(response.statusCode).toBe(200);
+    expect(checkType(response, "resetPassword")).toBeTruthy();
+    const user = await new User().load({ email: "tester@test.de" });
+    expect(user.content.token).toBe(userOld.content.token);
+    expect(user.content.tokenforreset).toBeTruthy();
+
+    expect(mailObj.sendMail.mock.calls.length).toBe(1);
+    expect(mailObj.sendMail.mock.calls[0][0]).toBe("tester@test.de");
+    expect(mailObj.sendMail.mock.calls[0][1]).toBe(
+      `Hier kannst du dein Passwort ändern: https://apparts.com/reset?token=${encodeURIComponent(
+        user.content.tokenforreset
+      )}&email=tester%40test.de`
+    );
+    expect(mailObj.sendMail.mock.calls[0][2]).toBe("Passwort vergessen?");
+  });
+});
+
 describe("All possible responses tested", () => {
   test("", () => {
     expect(allChecked("getToken")).toBeTruthy();
     expect(allChecked("getAPIToken")).toBeTruthy();
     expect(allChecked("addUser")).toBeTruthy();
     expect(allChecked("getUser")).toBeTruthy();
+    expect(allChecked("resetPassword")).toBeTruthy();
   });
 });

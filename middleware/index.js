@@ -8,7 +8,6 @@ let DB_CONFIG = null;
 let dbs = undefined;
 const getDBPool = (next) => {
   if (dbs === undefined) {
-    console.log("dbs undefined");
     dbs = connect(DB_CONFIG, (e, dbs) => {
       if (e) {
         /* istanbul ignore next */
@@ -16,7 +15,6 @@ const getDBPool = (next) => {
         console.log(e);
         throw e;
       }
-      console.log("Connected to DB");
       next(dbs);
     });
   } else {

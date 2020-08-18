@@ -12,5 +12,9 @@
     "title": "Willkommen",
     "body": "Bitte bestätige deine Email: ##URL##"
   },
+  "resetMail": {
+    "title": "Passwort vergessen?",
+    "body": "Hier kannst du dein Passwort ändern: ##URL##"
+  },
   "resetUrl": "https://apparts.com/reset"
 }

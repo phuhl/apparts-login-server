@@ -167,27 +167,22 @@ const resetPassword = (useUser, mail) =>
       try {
         await me.load({ email: email.toLowerCase() });
       } catch (e) {
-        catchException(NotFound, e);
-        return "ok";
+        return exceptionTo(NotFound, e, HttpError.notFound("User"));
       }
       await me.genResetToken();
-      await mail.sendMail(
-        email,
-        AUTH_CONFIG.resetPWMail.body
-          .replace(/##NAME##/g, me.content.name)
-          .replace(
-            /##URL##/g,
-            AUTH_CONFIG.resetUrl +
-              `?token=${encodeURIComponent(me.content.tokenForReset)}`
-          ),
-        AUTH_CONFIG.resetPWMail.title.replace(/##NAME##/g, me.content.name)
-      );
+
       await me.update();
 
+      const { title, body } = me.getResetPWMail();
+      await mail.sendMail(email, body, title);
+
       return "ok";
-    },
-    { strap: true }
+    }
   );
+resetPassword.returns = [
+  { status: 404, error: "User not found" },
+  { status: 200, value: "ok" },
+];
 
 module.exports = {
   addUser,

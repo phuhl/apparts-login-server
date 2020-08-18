@@ -9,6 +9,7 @@ const JWT = require("jsonwebtoken");
 const {
   apiToken: { webtokenkey, expireTime },
   welcomeMail,
+  resetMail,
   resetUrl,
 } = UserSettings;
 module.exports = (dbs) => {
@@ -34,16 +35,27 @@ module.exports = (dbs) => {
 
     getWelcomeMail() {
       return {
-        title: welcomeMail.title, // .replace(/##NAME##/g, name),
-        body: welcomeMail.body
-          //          .replace(/##NAME##/g, name)
-          .replace(
-            /##URL##/g,
-            resetUrl +
-              `?token=${encodeURIComponent(
-                this.content.tokenforreset
-              )}&email=${encodeURIComponent(this.content.email)}&welcome=true`
-          ),
+        title: welcomeMail.title,
+        body: welcomeMail.body.replace(
+          /##URL##/g,
+          resetUrl +
+            `?token=${encodeURIComponent(
+              this.content.tokenforreset
+            )}&email=${encodeURIComponent(this.content.email)}&welcome=true`
+        ),
+      };
+    }
+
+    getResetPWMail() {
+      return {
+        title: resetMail.title,
+        body: resetMail.body.replace(
+          /##URL##/g,
+          resetUrl +
+            `?token=${encodeURIComponent(
+              this.content.tokenforreset
+            )}&email=${encodeURIComponent(this.content.email)}`
+        ),
       };
     }
 

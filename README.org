@@ -228,43 +228,6 @@ Authorization: Basic :my-auth
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-*** TODO DELETE =/v1/user/:id=
-
-- Path Parameters
-  - ~int {id}~ :: Id of the user to be deleted
-- Headers
-  - =Authorization= with =Basic= base64(username:password)
-- Returns
-  + ~"ok"~
-  + 400, ~"Authorization wrong"~
-  + 401, ~"Unauthorized"~
-  + 404, ~"User not found"~
-
-_Example:_
-#+BEGIN_SRC restclient :exports both
-:my-auth := (base64-encode-string "testname1@gmail.com:a123456" t)
-
-DELETE http://127.0.0.1:3000/v1/user/17
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic :my-auth
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC js
-"ok"
-// DELETE http://127.0.0.1:3000/v1/user/17
-// HTTP/1.1 200 OK
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 4
-// ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
-// Date: Tue, 12 Feb 2019 15:59:24 GMT
-// Connection: keep-alive
-// Request duration: 0.259496s
-#+END_SRC
-
 *** TODO PUT =/v1/user/:id=
 
 - Path Parameters
@@ -310,23 +273,39 @@ name=dude&password=myPw1
 // Request duration: 0.259056s
 #+END_SRC
 
-*** TODO PUT =/v1/user/:email/password=
+*** Request password reset: POST =/v1/user/:email/password=
 
 - Path Parameters
-  - ~email {emial}~ :: Email of the user to be changed
+  - ~email {email}~ :: Email of the user to be changed
+- Returns
+  + 200, ~"ok"~
+  + 404, ~"User not found"~
+
+*** TODO DELETE =/v1/user/:id=
+
+- Path Parameters
+  - ~int {id}~ :: Id of the user to be deleted
+- Headers
+  - =Authorization= with =Basic= base64(username:password)
 - Returns
   + ~"ok"~
+  + 400, ~"Authorization wrong"~
+  + 401, ~"Unauthorized"~
+  + 404, ~"User not found"~
 
 _Example:_
 #+BEGIN_SRC restclient :exports both
-POST http://127.0.0.1:3000/v1/user/abc@web.de/reset
+:my-auth := (base64-encode-string "testname1@gmail.com:a123456" t)
+
+DELETE http://127.0.0.1:3000/v1/user/17
 Content-Type: application/x-www-form-urlencoded
+Authorization: Basic :my-auth
 #+END_SRC
 
 #+RESULTS:
 #+BEGIN_SRC js
 "ok"
-// POST http://127.0.0.1:3001/v1/user/abc@web.de/reset
+// DELETE http://127.0.0.1:3000/v1/user/17
 // HTTP/1.1 200 OK
 // X-Powered-By: Express
 // Vary: Origin
@@ -334,11 +313,10 @@ Content-Type: application/x-www-form-urlencoded
 // Content-Type: application/json; charset=utf-8
 // Content-Length: 4
 // ETag: W/"4-Ut1MdMgT2zeQF5xPI2zq2so0Z6g"
-// Date: Wed, 13 Feb 2019 15:33:11 GMT
+// Date: Tue, 12 Feb 2019 15:59:24 GMT
 // Connection: keep-alive
-// Request duration: 0.020691s
+// Request duration: 0.259496s
 #+END_SRC
-
 
 * Flows
 
