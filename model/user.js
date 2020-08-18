@@ -16,11 +16,11 @@ module.exports = (dbs) => {
     dbs,
     {
       id: { type: "id", public: true, auto: true, key: true },
-      email: { type: "email", unique: true },
+      email: { type: "email", unique: true, public: true },
       token: { type: "base64" },
       tokenforreset: { type: "base64", optional: true },
       hash: { type: "/", optional: true },
-      createdon: { type: "time", default: () => Date.now() },
+      createdon: { type: "time", default: () => Date.now(), public: true },
     },
     "users"
   );

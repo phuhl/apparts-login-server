@@ -36,20 +36,13 @@ addUser.returns = [
 ];
 
 const getUser = (useUser) =>
-  prepauthToken(
-    useUser,
-    {
-      params: {
-        id: { type: "id" },
-      },
-    },
-    async function ({ params: { id } }, me) {
-      if (id !== me.content.id) {
-        return new HttpError(401);
-      }
-      return me.getPublic();
-    }
-  );
+  prepauthToken(useUser, {}, async function (_, me) {
+    return me.getPublic();
+  });
+getUser.returns = [
+  { status: 200, type: "object", values: "/" },
+  ...prepauthPW.returns,
+];
 
 const getToken = (useUser) =>
   prepauthPW(useUser, {}, async function (req, me) {

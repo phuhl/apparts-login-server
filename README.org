@@ -155,45 +155,19 @@ name=:uname&email=:email&password=:pw
 // Request duration: 0.272916s
 #+END_SRC
 
-*** TODO GET =/v1/user=
+*** Get user info: GET =/v1/user=
 
-- Path Parameters
-  - ~int {id}~ :: Id of the user to be returned
+Returns the user info. All values that are set to public (see
+[[https://github.com/phuhl/apparts-model#usage][@apparts/model]]) in the ~extraTypes~ (see [[Configuration]]) are also
+returned.
+
 - Headers
   - =Authorization= with =Basic= base64(username:token)
 - Returns
-  + ~{ id: {id}, name: {string} }~
+  + 200, ~{ id: {id}, email: {string}, [...public extra] }~
   + 400, ~"Authorization wrong"~
   + 401, ~"Unauthorized"~
-  + 404
-
-_Example:_
-#+BEGIN_SRC restclient :exports both
-:my-auth := (base64-encode-string "testname3@gmail.com:0mK3qRBqyuHGcrxghZRXGbynLlx6LDxr5+TT0FJOJv0=" t)
-
-GET http://127.0.0.1:3000/v1/user/20
-Content-Type: application/x-www-form-urlencoded
-Authorization: Basic :my-auth
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC js
-{
-  "id": 20,
-  "name": "testname3"
-}
-// GET http://127.0.0.1:3000/v1/user/20
-// HTTP/1.1 200 OK
-// X-Powered-By: Express
-// Vary: Origin
-// Access-Control-Allow-Credentials: true
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 28
-// ETag: W/"1c-7vM82X4RsHmDNUOUE2XcYT5mRCM"
-// Date: Tue, 12 Feb 2019 15:57:00 GMT
-// Connection: keep-alive
-// Request duration: 0.007437s
-#+END_SRC
+  + 401, ~"User not found""~
 
 *** Login: GET =/v1/user/token=
 

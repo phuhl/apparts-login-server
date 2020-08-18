@@ -257,10 +257,50 @@ describe("signup", () => {
   });
 });
 
+describe("get user", () => {
+  test("User does not exist", async () => {
+    const response = await request(app)
+      .get(url("user"))
+      .auth("doesnotexist@test.de", "a12345678");
+    expect(response.body).toMatchObject(error("User not found"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "getUser")).toBeTruthy();
+  });
+  test("Empty email address", async () => {
+    const response = await request(app).get(url("user")).auth("", "a12345678");
+    expect(response.body).toMatchObject(error("Authorization wrong"));
+    expect(response.statusCode).toBe(400);
+    expect(checkType(response, "getUser")).toBeTruthy();
+  });
+  test("Wrong auth", async () => {
+    const response = await request(app)
+      .get(url("user"))
+      .auth("tester@test.de", "aorsitenrstne");
+    expect(response.body).toMatchObject(error("Unauthorized"));
+    expect(response.statusCode).toBe(401);
+    expect(checkType(response, "getUser")).toBeTruthy();
+  });
+  test("Success", async () => {
+    const [, User] = useUser(getPool());
+    const user = await new User().load({ email: "tester@test.de" });
+    const response = await request(app)
+      .get(url("user"))
+      .auth("tester@test.de", user.content.token);
+    expect(response.body).toMatchObject({
+      email: "tester@test.de",
+      id: user.content.id,
+      createdon: 1575158400000 + 1000 * 60 * 60 * 9.7,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(checkType(response, "getUser")).toBeTruthy();
+  });
+});
+
 describe("All possible responses tested", () => {
   test("", () => {
     expect(allChecked("getToken")).toBeTruthy();
     expect(allChecked("getAPIToken")).toBeTruthy();
     expect(allChecked("addUser")).toBeTruthy();
+    expect(allChecked("getUser")).toBeTruthy();
   });
 });
