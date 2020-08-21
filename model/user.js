@@ -12,7 +12,7 @@ const {
   resetMail,
   resetUrl,
 } = UserSettings;
-module.exports = (dbs) => {
+module.exports = (dbs, types, collectionName = "users") => {
   const [Users, _User, NoUser] = useModel(
     dbs,
     {
@@ -23,8 +23,9 @@ module.exports = (dbs) => {
       hash: { type: "/", optional: true },
       deleted: { type: "bool", default: false },
       createdon: { type: "time", default: () => Date.now(), public: true },
+      ...types,
     },
-    "users"
+    collectionName
   );
 
   class User extends _User {

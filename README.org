@@ -4,33 +4,59 @@
 
 * Backend
 
-** TODO Usage
+** Usage
 
-1. Install peer-dependencies for backend
-
-   - "@apparts/config": "^1.0.5",
-   - "@apparts/error": "^1.0.3",
-   - "@apparts/types": "^2.6.1",
-   - "@apparts/db": "^2.0.0",
-   - "@apparts/model": "^3.0.0"
-   - "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"
-   - "bcrypt-nodejs": "0.0.3"
-   - "crypto": "^1.0.1"
-   - "express": "^4.16.4"
-
-2. Set user-model in your =app.js=
+1. ~npm i --save @apparts/login-server~
+2. Add the package to your codebase:
    #+BEGIN_SRC js
-   const { prepauth } = require('apparts-types');
-   const User = require('./model/user.js');
-   prepauth.setUserModel(User);
+     const { addRoutes, useUser } = require("@apparts/login-server");
+     const express = require("express");
+
+     const app = express();
+     // ...
+
+     const mail = {
+       async sendMail(to, body, title){
+         //   ...
+       }
+     };
+     addRoutes(app, useUser, mail);
+     // ...
    #+END_SRC
+   - If you need to specify the route names (and methods) by yourself:
+     #+BEGIN_SRC js
+       const { routes } = require("@apparts/login-server");
 
-3. Start a Postgresql-server according to configuration
+       const {  addUser,
+                getUser,
+                getToken,
+                getAPIToken,
+                deleteUser,
+                updateUser,
+                resetPassword, } = routes;
 
-4. Setup DB as needed or run =npm run setupDB=
-
-5. =npm run serve=
-
+       // E.g.:
+       app.post("/v/1/user", addUser(useUser, mail));
+       app.get("/v/1/user/login", getToken(useUser, mail));
+       app.get("/v/1/user/apiToken", getAPIToken(useUser, mail));
+       app.get("/v/1/user", getUser(useUser, mail));
+       app.delete("/v/1/user", deleteUser(useUser, mail));
+       app.put("/v/1/user", updateUser(useUser, mail));
+       app.post("/v/1/user/:email/reset", resetPassword(useUser, mail));
+     #+END_SRC
+   - If you need to configure the User-model:
+     - The table name (default ~users~):
+       #+BEGIN_SRC js
+         const { useUser: _useUser } = require("@apparts/login-server");
+         const useUser = (dbs) => _useUser(dbs, undefined, "myTableName");
+       #+END_SRC
+     - The types of the user (see [[https://github.com/phuhl/apparts-types#usage][@apparts/types]]):
+       #+BEGIN_SRC js
+         const { useUser: _useUser } = require("@apparts/login-server");
+         const useUser = (dbs) => _useUser(dbs, { customElement: { type: "string", public: true }});
+       #+END_SRC
+     -  Overwriting functions of the user: See [[Overwriting functions of the User-model]]
+       
 ** Configuration
 
 In =db-config=
@@ -61,13 +87,17 @@ They are:
   - ~?welcome {bool}~ :: Set to true, if this is not from a password
     reset mail, but from a welcome mail.
 - ~extraTypes {?object}~ :: An optional object that contains type
-  definitions as expected by the preperator of @apparts/types. Will be
+  definitions as expected by the preperator of [[https://github.com/phuhl/apparts-types#usage][@apparts/types]]. Will be
   injected into the ~body~-type definitions of ~POST /v/1/user~ and
   can be used to validate extra parameters on user creation. These
   extra parameters will be passed to the ~setExtra~ function (see
   [[Overwriting the User-model]]).
 
-*** Overwriting the User-model
+*** Customizing the User-model
+
+
+
+*** Overwriting functions of the User-model
 
 The user model can be overwritten to provide extra functionality. For
 more information on how to overwrite functions of the user model, see
@@ -151,7 +181,7 @@ Returns the user info. All values that are set to public (see
 returned.
 
 - Headers
-  - =Authorization= with =Basic= base64(username:token)
+  - =Authorization= with =Basic base64(username:token)=
 - Returns
   + 200, ~{ id: {id}, email: {string}, [...public extra] }~
   + 400, ~"Authorization wrong"~
@@ -161,7 +191,7 @@ returned.
 *** Login: GET =/v1/user/token=
 
 - Headers
-  - =Authorization= with =Basic= base64(username:password)
+  - =Authorization= with =Basic base64(username:password)=
 - Returns
   + 200, 
     : {
@@ -210,7 +240,7 @@ checking for a minimum password length:
 - Body Parameters
   - ~password {password}~ :: Optional, the new password
 - Headers
-  - =Authorization= with =Basic= base64(username:token).
+  - =Authorization= with =Basic base64(username:token)=.
     - Token can either be the ~loginToken~ or a ~tokenforreset~
 - Returns
   + 200, 
@@ -241,18 +271,18 @@ checking for a minimum password length:
 This function *does not* delete the user. It only disables access to
 the login server API in any way. To the outside it should not be
 visible, if the user is disabled or non-existing. To delete a user,
-overwrite the ~async deleteMe() {void}~ (see [[Overwriting the
-User-model]]) function of the User object. The reason for this is, that
+overwrite the ~async deleteMe() {void}~ (see [[Overwriting the User-model]])
+function of the User object. The reason for this is, that
 the use of foreign keys in databases might be disturbed by deleting
 the entity from the database.
 
 - Headers
-  - =Authorization= with =Basic= base64(username:password)
+  - =Authorization= with =Basic base64(username:password)=
 - Returns
   + 200, ~"ok"~
   + 400, ~"Authorization wrong"~
   + 401, ~"Unauthorized"~
-  + 401, ~"User not found""~
+  + 401, ~"User not found"~
 
 * Flows
 

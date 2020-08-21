@@ -1,6 +1,5 @@
-import Routes from "./routes/user";
-import Model from "./model/user";
+const addRoutes = require("./routes");
+const routes = require("./routes/v1/user");
+const useUser = require("./model/user");
 
-const exp = { Routes: { User: Routes }, Models: { User: Model } };
-
-module.exports = exp;
+module.exports = { addRoutes, routes, useUser };
