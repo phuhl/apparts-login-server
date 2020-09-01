@@ -23,7 +23,7 @@
     "signup"
   ],
   "author": "Philipp Uhl",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "@apparts/config": "^1.0.5",
     "@apparts/db": "^2.0.0",
@@ -41,12 +41,6 @@
     "pg": "^8.3.0",
     "ramda": "^0.27.1",
     "supertest": "^4.0.2"
-  },
-  "peerDependencies": {
-    "@apparts/config": "^1.0.5",
-    "@apparts/error": "^1.0.3",
-    "@apparts/db": "^2.0.0",
-    "@apparts/model": "^3.0.0"
   },
   "optionalPeerDependencies": {
     "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"

@@ -161,7 +161,7 @@ explicitly intended for overwriting:
 
 ** Provided REST-API
 
-*** Create a user: POST =/v1/user/=
+*** Create a user: POST =/v/1/user/=
 
 - Body Parameters
   - ~email {email}~ :: Email
@@ -174,7 +174,7 @@ containing a link for verifying the email. This link contains a token
 that can be used for the reset password API and thus can be used to
 set the password.
 
-*** Get user info: GET =/v1/user=
+*** Get user info: GET =/v/1/user=
 
 Returns the user info. All values that are set to public (see
 [[https://github.com/phuhl/apparts-model#usage][@apparts/model]]) in the ~extraTypes~ (see [[Configuration]]) are also
@@ -188,7 +188,7 @@ returned.
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-*** Login: GET =/v1/user/token=
+*** Login: GET =/v/1/user/login=
 
 - Headers
   - =Authorization= with =Basic base64(username:password)=
@@ -206,7 +206,7 @@ returned.
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-*** Refresh API Token: GET =/v1/user/apiToken=
+*** Refresh API Token: GET =/v/1/user/apiToken=
 
 - Headers
   - =Authorization= with =Bearer loginToken= 
@@ -219,7 +219,7 @@ returned.
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-*** Update user: PUT =/v1/user/:id=
+*** Update user: PUT =/v/1/user=
 
 Update the user. All extra info must be updated over custom written
 APIs. Checking the password for a special password policy must be done
@@ -258,7 +258,7 @@ checking for a minimum password length:
   + 401, ~"Unauthorized"~
   + 401, ~"User not found""~
 
-*** Request password reset: POST =/v1/user/:email/password=
+*** Request password reset: POST =/v/1/user/:email/reset=
 
 - Path Parameters
   - ~email {email}~ :: Email of the user to be changed
@@ -266,7 +266,7 @@ checking for a minimum password length:
   + 200, ~"ok"~
   + 404, ~"User not found"~
 
-*** Delete a user: DELETE =/v1/user=
+*** Delete a user: DELETE =/v/1/user=
 
 This function *does not* delete the user. It only disables access to
 the login server API in any way. To the outside it should not be
@@ -304,7 +304,7 @@ deactivate Loginservice
 User <-- Mailserver : Mail with token
 deactivate Mailserver
 
-User -> Loginservice : PUT /v/1/user/:email [token]
+User -> Loginservice : PUT /v/1/user [token]
 activate Loginservice
 User <-- Loginservice : { JWT, loginToken }
 deactivate Loginservice
@@ -322,7 +322,7 @@ skinparam monochrome true
 skinparam shadowing false
 
 group Login
-User -> Loginservice : GET /v1/user/token [PW]
+User -> Loginservice : GET /v1/user/login [PW]
 activate Loginservice
 User <-- Loginservice : { JWT, loginToken }
 deactivate Loginservice
@@ -349,7 +349,7 @@ Activate API
 User <--x API : 401
 deactivate API
 
-User -> Loginservice : GET /v1/user/getAPIToken [loginToken]
+User -> Loginservice : GET /v1/user/apiToken [loginToken]
 activate Loginservice
 User <-- Loginservice : JWT
 deactivate Loginservice
@@ -373,7 +373,7 @@ skinparam roundcorner 5
 skinparam monochrome true
 skinparam shadowing false
 
-User -> Loginservice : GET /v1/user/token [wrong PW]
+User -> Loginservice : GET /v1/user/login [wrong PW]
 activate Loginservice
 User <--x Loginservice : 401
 deactivate Loginservice
@@ -387,7 +387,7 @@ deactivate Loginservice
 User <-- Mailserver : Mail with token
 deactivate Mailserver
 
-User -> Loginservice : PUT /v/1/user/:email [token]
+User -> Loginservice : PUT /v/1/user [token]
 activate Loginservice
 User <-- Loginservice : { JWT, loginToken }
 deactivate Loginservice
