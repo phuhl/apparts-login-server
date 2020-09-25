@@ -23,6 +23,19 @@
      addRoutes(app, useUser, mail);
      // ...
    #+END_SRC
+   - If you need to specify the route version by yourself:
+     #+BEGIN_SRC js
+       const newApiVersion = 2;
+       addRoutes(app, useUser, mail, newApiVersion);
+       // routes will start with /v/2/...
+
+       const oldApiVersion = 1;
+       addRoutes.upgrade(app, oldApiVersion, (_, res) => {
+         res.status(410);
+         res.send("Your app is too old. Please upgrade your app to the newest version.");
+       });
+       // all /v/1/... routes will send 410
+     #+END_SRC
    - If you need to specify the route names (and methods) by yourself:
      #+BEGIN_SRC js
        const { routes } = require("@apparts/login-server");
