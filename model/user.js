@@ -81,6 +81,9 @@ module.exports = (dbs, types, collectionName = "users") => {
     }
 
     async _checkPw(password) {
+      if (!this.content.hash) {
+        throw new HttpError(401, "Please reset your password.");
+      }
       const matches = await bcrypt.compare(password, this.content.hash);
       if (matches) {
         return this;
