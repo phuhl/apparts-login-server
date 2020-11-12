@@ -1,12 +1,4 @@
-const {
-  addUser,
-  getUser,
-  getToken,
-  getAPIToken,
-  deleteUser,
-  updateUser,
-  resetPassword,
-} = require("./v1/user");
+const useUserRoutes = require("./v1/user");
 
 const addRoutesForUpgrade = (app, f, apiVersion = 1) => {
   app.post("/v/" + apiVersion + "/user", f);
@@ -19,16 +11,23 @@ const addRoutesForUpgrade = (app, f, apiVersion = 1) => {
 };
 
 const addRoutes = (app, useUser, mail, apiVersion = 1) => {
-  app.post("/v/" + apiVersion + "/user", addUser(useUser, mail));
-  app.get("/v/" + apiVersion + "/user/login", getToken(useUser, mail));
-  app.get("/v/" + apiVersion + "/user/apiToken", getAPIToken(useUser, mail));
-  app.get("/v/" + apiVersion + "/user", getUser(useUser, mail));
-  app.delete("/v/" + apiVersion + "/user", deleteUser(useUser, mail));
-  app.put("/v/" + apiVersion + "/user", updateUser(useUser, mail));
-  app.post(
-    "/v/" + apiVersion + "/user/:email/reset",
-    resetPassword(useUser, mail)
-  );
+  const {
+    addUser,
+    getUser,
+    getToken,
+    getAPIToken,
+    deleteUser,
+    updateUser,
+    resetPassword,
+  } = useUserRoutes(useUser, mail);
+
+  app.post("/v/" + apiVersion + "/user", addUser);
+  app.get("/v/" + apiVersion + "/user/login", getToken);
+  app.get("/v/" + apiVersion + "/user/apiToken", getAPIToken);
+  app.get("/v/" + apiVersion + "/user", getUser);
+  app.delete("/v/" + apiVersion + "/user", deleteUser);
+  app.put("/v/" + apiVersion + "/user", updateUser);
+  app.post("/v/" + apiVersion + "/user/:email/reset", resetPassword);
 };
 
 module.exports = addRoutes;

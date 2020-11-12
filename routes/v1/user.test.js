@@ -1,4 +1,7 @@
 const request = require("supertest");
+const useUser = require("../../model/user.js");
+const mailObj = {};
+
 const {
   checkType,
   allChecked,
@@ -7,14 +10,12 @@ const {
   error,
   getPool,
 } = require("../../tests")(
-  require("./user"),
+  require("./user")(useUser, mailObj),
   require("./tests/config.js"),
   [],
   "user"
 );
 
-const useUser = require("../../model/user.js");
-const mailObj = {};
 const app = _app(useUser, mailObj);
 
 const {

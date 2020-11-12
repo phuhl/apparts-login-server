@@ -5,8 +5,8 @@ const { HttpError, exceptionTo, catchException } = require("@apparts/error");
 const { NotUnique, NotFound, DoesExist } = require("@apparts/model");
 const UserSettings = require("@apparts/config").get("login-config");
 
-const addUser = (useUser, mail) =>
-  preparator(
+const useUserRoutes = (useUser, mail) => {
+  const addUser = preparator(
     {
       body: {
         email: { type: "email" },
@@ -28,66 +28,92 @@ const addUser = (useUser, mail) =>
       const { title, body } = me.getWelcomeMail();
       await mail.sendMail(email, body, title);
       return "ok";
+    },
+    {
+      title: "Add a user",
+      returns: [
+        { status: 200, value: "ok" },
+        { status: 413, error: "User exists" },
+      ],
     }
   );
-addUser.returns = [
-  { status: 200, value: "ok" },
-  { status: 413, error: "User exists" },
-];
 
-const getUser = (useUser) =>
-  prepauthToken(useUser, {}, async function (_, me) {
-    return me.getPublic();
-  });
-getUser.returns = [
-  { status: 200, type: "object", values: "/" },
-  ...prepauthPW.returns,
-];
-
-const getToken = (useUser) =>
-  prepauthPW(useUser, {}, async function (req, me) {
-    const apiToken = await me.getAPIToken();
-    return {
-      id: me.content.id,
-      loginToken: me.content.token,
-      apiToken,
-    };
-  });
-getToken.returns = [
-  {
-    status: 200,
-    type: "object",
-    values: {
-      id: { type: "id" },
-      loginToken: { type: "base64" },
-      apiToken: { type: "string" },
+  const getUser = prepauthToken(
+    useUser,
+    {},
+    async function (_, me) {
+      return me.getPublic();
     },
-  },
-  ...prepauthPW.returns,
-];
+    {
+      title: "Get a user",
+      returns: [
+        { status: 200, type: "object", values: "/" },
+        ...prepauthPW.returns,
+      ],
+    }
+  );
 
-const getAPIToken = (useUser) =>
-  prepauthToken(useUser, {}, async function (req, me) {
-    const apiToken = await me.getAPIToken();
-    return apiToken;
-  });
-getAPIToken.returns = [
-  {
-    status: 200,
-    type: "string",
-  },
-  ...prepauthToken.returns,
-];
+  const getToken = prepauthPW(
+    useUser,
+    {},
+    async function (req, me) {
+      const apiToken = await me.getAPIToken();
+      return {
+        id: me.content.id,
+        loginToken: me.content.token,
+        apiToken,
+      };
+    },
+    {
+      title: "Login",
+      returns: [
+        {
+          status: 200,
+          type: "object",
+          values: {
+            id: { type: "id" },
+            loginToken: { type: "base64" },
+            apiToken: { type: "string" },
+          },
+        },
+        ...prepauthPW.returns,
+      ],
+    }
+  );
 
-const deleteUser = (useUser) =>
-  prepauthPW(useUser, {}, async function (_, me) {
-    await me.deleteMe();
-    return "ok";
-  });
-deleteUser.returns = [{ status: 200, value: "ok" }, ...prepauthPW.returns];
+  const getAPIToken = prepauthToken(
+    useUser,
+    {},
+    async function (req, me) {
+      const apiToken = await me.getAPIToken();
+      return apiToken;
+    },
+    {
+      title: "Renew API Token",
+      returns: [
+        {
+          status: 200,
+          type: "string",
+        },
+        ...prepauthToken.returns,
+      ],
+    }
+  );
 
-const updateUser = (useUser) =>
-  prepauthToken(
+  const deleteUser = prepauthPW(
+    useUser,
+    {},
+    async function (_, me) {
+      await me.deleteMe();
+      return "ok";
+    },
+    {
+      title: "Delete a user",
+      returns: [{ status: 200, value: "ok" }, ...prepauthPW.returns],
+    }
+  );
+
+  const updateUser = prepauthToken(
     useUser,
     {
       body: {
@@ -132,25 +158,28 @@ const updateUser = (useUser) =>
         loginToken: me.content.token,
         apiToken,
       };
+    },
+    {
+      title: "Update a user",
+      description: "Currently, only updating the password is supported.",
+      returns: [
+        { status: 400, error: "Nothing to update" },
+        { status: 400, error: "Password required" },
+        {
+          status: 200,
+          type: "object",
+          values: {
+            id: { type: "id" },
+            loginToken: { type: "base64" },
+            apiToken: { type: "string" },
+          },
+        },
+        ...prepauthPW.returns,
+      ],
     }
   );
-updateUser.returns = [
-  { status: 400, error: "Nothing to update" },
-  { status: 400, error: "Password required" },
-  {
-    status: 200,
-    type: "object",
-    values: {
-      id: { type: "id" },
-      loginToken: { type: "base64" },
-      apiToken: { type: "string" },
-    },
-  },
-  ...prepauthPW.returns,
-];
 
-const resetPassword = (useUser, mail) =>
-  preparator(
+  const resetPassword = preparator(
     {
       params: {
         email: { type: "email" },
@@ -173,19 +202,25 @@ const resetPassword = (useUser, mail) =>
       await mail.sendMail(email, body, title);
 
       return "ok";
+    },
+    {
+      title: "Reset the password",
+      returns: [
+        { status: 404, error: "User not found" },
+        { status: 200, value: "ok" },
+      ],
     }
   );
-resetPassword.returns = [
-  { status: 404, error: "User not found" },
-  { status: 200, value: "ok" },
-];
 
-module.exports = {
-  addUser,
-  getUser,
-  getToken,
-  getAPIToken,
-  deleteUser,
-  updateUser,
-  resetPassword,
+  return {
+    addUser,
+    getUser,
+    getToken,
+    getAPIToken,
+    deleteUser,
+    updateUser,
+    resetPassword,
+  };
 };
+
+module.exports = useUserRoutes;

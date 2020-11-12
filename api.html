@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<!-- Commit hash: undefined -->
+<html>
+  <head>
+    <style>
+      
+:root {
+  --dark-0: #0e0e0c;
+  --dark-1: #292923;
+  --dark-2: #45453a;
+  --dark-3: #616152;
+  --dark-4: #7c7c69;
+
+  --bright-0: #adad9e;
+  --bright-1: #c0c0b5;
+  --bright-2: #d4d4cc;
+  --bright-3: #e7e7e3;
+  --bright-4: #fafaf9;
+
+  --primary-0: #5e5108;
+  --primary-1: #7d6c0b;
+  --primary-2: #9c870e;
+  --primary-3: #bba111;
+  --primary-4: #dabc14;
+  --primary-5: #ebcd25;
+  --primary-6: #eed444;
+  --primary-7: #f1dc63;
+  --primary-8: #f4e382;
+  --primary-9: #f7eaa2;
+
+  --secondary-0: #425511;
+  --secondary-1: #587216;
+  --secondary-2: #6e8e1c;
+  --secondary-3: #84aa22;
+  --secondary-4: #9ac727;
+  --secondary-5: #abd838;
+  --secondary-6: #b7dd55;
+  --secondary-7: #c3e371;
+  --secondary-8: #cfe98d;
+  --secondary-9: #dbeeaa;
+
+  --green-0: #145214;
+  --green-1: #248f24;
+  --green-2: #33cc33;
+  --green-3: #70db70;
+  --green-4: #adebad;
+
+  --yellow-0: #565610;
+  --yellow-1: #96971c;
+  --yellow-2: #d7d728;
+  --yellow-3: #e3e369;
+  --yellow-4: #efefa9;
+
+  --red-0: #521414;
+  --red-1: #8f2424;
+  --red-2: #cc3333;
+  --red-3: #db7070;
+  --red-4: #ebadad;
+}
+
+body {
+  background: var(--bright-5);
+}
+* {
+  font-family: sans-serif;
+}
+section {
+  background: var(--bright-3);
+  padding: 40px;
+  border-radius: 10px;
+  margin: 20px;
+}
+p {
+  margin-bottom: 40px;
+}
+.path {
+  font-weight: bold;
+  color: var(--primary-1);
+}
+.version {
+  color: var(--green-1);
+}
+.method {
+  color: var(--secondary-2);
+}
+.type {
+  color: var(--primary-3);
+}
+.funcName {
+  font-size: 8px;
+  color: gray;
+}
+.error {
+  font-weight: bold;
+  color: red;
+}
+.returns {
+  font-weight: bold;
+}
+.docs {
+  max-width: 800px;
+  margin: auto;
+}
+.toc {
+  margin: 20px 20px 100px 20px;
+  padding: 20px;
+  background: var(--bright-3);
+  border-radius: 10px;
+}
+li {
+  margin-bottom: 10px;
+}
+h2{
+  margin-left: 50px;
+}
+.toc code {
+  display: inline-block;
+  margin: 5px;
+}
+.toc a {
+  margin: 20px;
+  color: var(--primary-1);
+  display: block;
+  text-decoration: none;
+}
+code {
+  font-family: mono;
+  background: var(--bright-2);
+  display: block;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="docs" >
+      <h2>Contents:</h2>
+      <div class="toc">
+        <a href="#post_/v/1/user">
+                Add a user<br/>
+                &nbsp;&nbsp;POST<code>/v/1/user</code>
+               </a><a href="#get_/v/1/user/login">
+                Login<br/>
+                &nbsp;&nbsp;GET<code>/v/1/user/login</code>
+               </a><a href="#get_/v/1/user/apiToken">
+                Renew API Token<br/>
+                &nbsp;&nbsp;GET<code>/v/1/user/apiToken</code>
+               </a><a href="#get_/v/1/user">
+                Get a user<br/>
+                &nbsp;&nbsp;GET<code>/v/1/user</code>
+               </a><a href="#delete_/v/1/user">
+                Delete a user<br/>
+                &nbsp;&nbsp;DELETE<code>/v/1/user</code>
+               </a><a href="#put_/v/1/user">
+                Update a user<br/>
+                &nbsp;&nbsp;PUT<code>/v/1/user</code>
+               </a><a href="#post_/v/1/user/:email/reset">
+                Reset the password<br/>
+                &nbsp;&nbsp;POST<code>/v/1/user/:email/reset</code>
+               </a>
+      </div>
+    </div>
+    <div class="docs" >
+     <h2>Endpoints:</h2>
+    <section id="post_/v/1/user">
+   <h3>Add a user</h3>
+   <p ></p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/user</span><br/>
+     <ul>
+     
+
+     
+          <li>Body: <br><ul>
+       <li><code>email:
+         <span class="type">&lt;email&gt; </span></code></li>
+       </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 200
+        <code>"ok"</code></li>
+      
+          <li>Status: 413
+        <code>{ "error": "User exists" }</code></li>
+      
+     </ul>
+  </div>
+</section><section id="get_/v/1/user/login">
+   <h3>Login</h3>
+   <p ></p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">GET</strong>
+     <span class="path">/v/1/user/login</span><br/>
+     <ul>
+     
+          <li>Header:
+          <ul>
+          <li>
+          <code>Authorization: Basic btoa(uname:password)</code>
+        </li>
+        </ul>
+          </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 200
+        <code>{<br/>&nbsp;&nbsp;"id": <span class="type">&lt;id&gt;</span>,<br/>&nbsp;&nbsp;"loginToken": <span class="type">&lt;base64&gt;</span>,<br/>&nbsp;&nbsp;"apiToken": <span class="type">&lt;string&gt;</span><br/>}</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "User not found" }</code></li>
+      
+          <li>Status: 400
+        <code>{ "error": "Authorization wrong" }</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "Unauthorized" }</code></li>
+      
+     </ul>
+  </div>
+</section><section id="get_/v/1/user/apiToken">
+   <h3>Renew API Token</h3>
+   <p ></p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">GET</strong>
+     <span class="path">/v/1/user/apiToken</span><br/>
+     <ul>
+     
+          <li>Header:
+          <ul>
+          <li>
+          <code>Authorization: Basic btoa(uname:token)</code>
+        </li>
+        </ul>
+          </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 200
+        <code><span class="type">&lt;string&gt;</span></code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "User not found" }</code></li>
+      
+          <li>Status: 400
+        <code>{ "error": "Authorization wrong" }</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "Unauthorized" }</code></li>
+      
+     </ul>
+  </div>
+</section><section id="get_/v/1/user">
+   <h3>Get a user</h3>
+   <p ></p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">GET</strong>
+     <span class="path">/v/1/user</span><br/>
+     <ul>
+     
+          <li>Header:
+          <ul>
+          <li>
+          <code>Authorization: Basic btoa(uname:token)</code>
+        </li>
+        </ul>
+          </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 200
+        <code>{<br/>&nbsp;&nbsp;<span class="type">&lt;/&gt;</span>: <span class="type">&lt;/&gt;</span><br/>}</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "User not found" }</code></li>
+      
+          <li>Status: 400
+        <code>{ "error": "Authorization wrong" }</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "Unauthorized" }</code></li>
+      
+     </ul>
+  </div>
+</section><section id="delete_/v/1/user">
+   <h3>Delete a user</h3>
+   <p ></p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">DELETE</strong>
+     <span class="path">/v/1/user</span><br/>
+     <ul>
+     
+          <li>Header:
+          <ul>
+          <li>
+          <code>Authorization: Basic btoa(uname:password)</code>
+        </li>
+        </ul>
+          </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 200
+        <code>"ok"</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "User not found" }</code></li>
+      
+          <li>Status: 400
+        <code>{ "error": "Authorization wrong" }</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "Unauthorized" }</code></li>
+      
+     </ul>
+  </div>
+</section><section id="put_/v/1/user">
+   <h3>Update a user</h3>
+   <p >Currently, only updating the password is supported.</p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">PUT</strong>
+     <span class="path">/v/1/user</span><br/>
+     <ul>
+     
+          <li>Header:
+          <ul>
+          <li>
+          <code>Authorization: Basic btoa(uname:token)</code>
+        </li>
+        </ul>
+          </li>
+        
+
+     
+          <li>Body: <br><ul>
+       <li><code>? password:
+         <span class="type">&lt;password&gt; </span></code></li>
+       </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 400
+        <code>{ "error": "Nothing to update" }</code></li>
+      
+          <li>Status: 400
+        <code>{ "error": "Password required" }</code></li>
+      
+          <li>Status: 200
+        <code>{<br/>&nbsp;&nbsp;"id": <span class="type">&lt;id&gt;</span>,<br/>&nbsp;&nbsp;"loginToken": <span class="type">&lt;base64&gt;</span>,<br/>&nbsp;&nbsp;"apiToken": <span class="type">&lt;string&gt;</span><br/>}</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "User not found" }</code></li>
+      
+          <li>Status: 400
+        <code>{ "error": "Authorization wrong" }</code></li>
+      
+          <li>Status: 401
+        <code>{ "error": "Unauthorized" }</code></li>
+      
+     </ul>
+  </div>
+</section><section id="post_/v/1/user/:email/reset">
+   <h3>Reset the password</h3>
+   <p ></p>
+   <div class="api">
+     <span class="version">v1</span>
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/user/:email/reset</span><br/>
+     <ul>
+     
+
+     
+          <li>Params: <br><ul>
+       <li><code>email:
+         <span class="type">&lt;email&gt; </span></code></li>
+       </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+          <li>Status: 404
+        <code>{ "error": "User not found" }</code></li>
+      
+          <li>Status: 200
+        <code>"ok"</code></li>
+      
+     </ul>
+  </div>
+</section>
+    </div>
+  </body>
+</html>
+
+
