@@ -4,5 +4,5 @@ module.exports = {
   schemas: ["schema000"].map((schema) =>
     fs.readFileSync("./sql/" + schema + ".sql").toString()
   ),
-  api: 1,
+  apiVersion: 1,
 };

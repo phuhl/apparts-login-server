@@ -1,22 +1,26 @@
 const request = require("supertest");
-const useUser = require("../../model/user.js");
+const _useUser = require("../../model/user.js");
+const { makeModel } = require("@apparts/model");
 const mailObj = {};
+const addRoutes = require("../");
+const useUserRoutes = require("./user");
+
+const { useUser } = _useUser();
 
 const {
   checkType,
   allChecked,
-  app: _app,
+  app,
   url,
   error,
   getPool,
-} = require("../../tests")(
-  require("./user")(useUser, mailObj),
-  require("./tests/config.js"),
-  [],
-  "user"
-);
+} = require("@apparts/backend-test")({
+  testName: "user",
+  apiContainer: require("./user")(useUser, mailObj),
+  ...require("./tests/config.js"),
+});
 
-const app = _app(useUser, mailObj);
+addRoutes(app, useUser, mailObj);
 
 const {
   apiToken: { webtokenkey, expireTime },
@@ -116,16 +120,25 @@ describe("getToken", () => {
   });
 
   test("Extra infos in token", async () => {
-    const [Users, User, NoUser] = useUser(getPool());
+    const [Users, User, NoUser] = useUser();
 
     class User1 extends User {
       getExtraAPITokenContent() {
         return { tada: 4 };
       }
     }
-    const user = await new User().load({ email: "tester@test.de" });
-    const response = await request(_app(() => [Users, User1, NoUser]))
-      .get(url("user/login"))
+    const newUsers = useUser();
+    newUsers[1] = User1;
+    const { getToken } = useUserRoutes(
+      makeModel("User", newUsers).useUser,
+      mailObj
+    );
+    app.get("/v/1/user1/login", getToken);
+
+    const user = await new User(getPool()).load({ email: "tester@test.de" });
+
+    const response = await request(app)
+      .get(url("user1/login"))
       .auth("tester@test.de", "a12345678");
     expect(response.body).toMatchObject({
       id: user.content.id,
@@ -203,11 +216,10 @@ describe("signup", () => {
     const response = await request(app).post(url("user")).send({
       email: "tester@test",
     });
-    expect(response.body).toMatchObject({
-      error: "Fieldmissmatch",
-      field: "body",
-      message: { email: "expected email" },
-    });
+    expect(response.body).toMatchObject(
+      error("Fieldmissmatch", 'expected email for field "email" in body')
+    );
+
     expect(response.statusCode).toBe(400);
   });
   test("Success", async () => {
@@ -234,7 +246,7 @@ describe("signup", () => {
     expect(mailObj.sendMail.mock.calls[0][2]).toBe("Willkommen");
   });
   test("Success with extra data", async () => {
-    const [Users, User, NoUser] = useUser(getPool());
+    const [Users, User, NoUser] = useUser();
 
     const mockFn = jest.fn();
 
@@ -243,8 +255,16 @@ describe("signup", () => {
         mockFn(extra);
       }
     }
-    const response = await request(_app(() => [Users, User1, NoUser], mailObj))
-      .post(url("user"))
+    const newUsers = useUser();
+    newUsers[1] = User1;
+    const { addUser } = useUserRoutes(
+      makeModel("User", newUsers).useUser,
+      mailObj
+    );
+    app.post("/v/1/user2", addUser);
+
+    const response = await request(app)
+      .post(url("user2"))
       .send({
         email: "newuser2@test.de",
         a: 3,
@@ -254,7 +274,7 @@ describe("signup", () => {
     expect(response.body).toBe("ok");
     expect(response.statusCode).toBe(200);
     expect(checkType(response, "addUser")).toBeTruthy();
-    const user = await new User().load({ email: "newuser2@test.de" });
+    const user = await new User(getPool()).load({ email: "newuser2@test.de" });
     expect(user.content.email).toBe("newuser2@test.de");
     expect(user.content.createdon).toBe(1575158400000 + 1000 * 60 * 60 * 9.7);
     expect(user.content.token).toBeTruthy();

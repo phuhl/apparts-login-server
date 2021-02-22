@@ -1,11 +1,17 @@
 "use strict";
 
-const { preparator, prepauthPW, prepauthToken } = require("@apparts/types");
+const {
+  preparator,
+  prepauthPW: prepauthPW_,
+  prepauthToken: prepauthToken_,
+} = require("@apparts/types");
 const { HttpError, exceptionTo, catchException } = require("@apparts/error");
 const { NotUnique, NotFound, DoesExist } = require("@apparts/model");
 const UserSettings = require("@apparts/config").get("login-config");
 
 const useUserRoutes = (useUser, mail) => {
+  const prepauthPW = prepauthPW_(useUser()[1]);
+  const prepauthToken = prepauthToken_(useUser()[1]);
   const addUser = preparator(
     {
       body: {
@@ -18,6 +24,7 @@ const useUserRoutes = (useUser, mail) => {
       const me = new User({
         email: email.toLowerCase(),
       });
+
       await me.setExtra(extra);
       await me.genResetToken();
       try {
@@ -39,7 +46,6 @@ const useUserRoutes = (useUser, mail) => {
   );
 
   const getUser = prepauthToken(
-    useUser,
     {},
     async function (_, me) {
       return me.getPublic();
@@ -47,14 +53,13 @@ const useUserRoutes = (useUser, mail) => {
     {
       title: "Get a user",
       returns: [
-        { status: 200, type: "object", values: "/" },
-        ...prepauthPW.returns,
+        { status: 200, type: "object", values: { type: "/" } },
+        { status: 401, error: "Unauthorized" },
       ],
     }
   );
 
   const getToken = prepauthPW(
-    useUser,
     {},
     async function (req, me) {
       const apiToken = await me.getAPIToken();
@@ -70,19 +75,18 @@ const useUserRoutes = (useUser, mail) => {
         {
           status: 200,
           type: "object",
-          values: {
+          keys: {
             id: { type: "id" },
             loginToken: { type: "base64" },
             apiToken: { type: "string" },
           },
         },
-        ...prepauthPW.returns,
+        { status: 401, error: "Unauthorized" },
       ],
     }
   );
 
   const getAPIToken = prepauthToken(
-    useUser,
     {},
     async function (req, me) {
       const apiToken = await me.getAPIToken();
@@ -95,13 +99,12 @@ const useUserRoutes = (useUser, mail) => {
           status: 200,
           type: "string",
         },
-        ...prepauthToken.returns,
+        { status: 401, error: "Unauthorized" },
       ],
     }
   );
 
   const deleteUser = prepauthPW(
-    useUser,
     {},
     async function (_, me) {
       await me.deleteMe();
@@ -109,12 +112,14 @@ const useUserRoutes = (useUser, mail) => {
     },
     {
       title: "Delete a user",
-      returns: [{ status: 200, value: "ok" }, ...prepauthPW.returns],
+      returns: [
+        { status: 200, value: "ok" },
+        { status: 401, error: "Unauthorized" },
+      ],
     }
   );
 
   const updateUser = prepauthToken(
-    useUser,
     {
       body: {
         password: { type: "password", optional: true },
@@ -163,18 +168,18 @@ const useUserRoutes = (useUser, mail) => {
       title: "Update a user",
       description: "Currently, only updating the password is supported.",
       returns: [
-        { status: 400, error: "Nothing to update" },
-        { status: 400, error: "Password required" },
         {
           status: 200,
           type: "object",
-          values: {
+          keys: {
             id: { type: "id" },
             loginToken: { type: "base64" },
             apiToken: { type: "string" },
           },
         },
-        ...prepauthPW.returns,
+        { status: 400, error: "Nothing to update" },
+        { status: 400, error: "Password required" },
+        { status: 401, error: "Unauthorized" },
       ],
     }
   );

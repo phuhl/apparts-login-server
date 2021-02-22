@@ -1,7 +1,7 @@
 "use strict";
 
 const { HttpError } = require("@apparts/error");
-const { useModel } = require("@apparts/model");
+const { useModel, makeModel } = require("@apparts/model");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const UserSettings = require("@apparts/config").get("login-config");
@@ -12,13 +12,12 @@ const {
   resetMail,
   resetUrl,
 } = UserSettings;
-module.exports = (dbs, types, collectionName = "users") => {
+module.exports = (types, collectionName = "users") => {
   const [Users, _User, NoUser] = useModel(
-    dbs,
     {
       id: { type: "id", public: true, auto: true, key: true },
       email: { type: "email", unique: true, public: true },
-      token: { type: "base64" },
+      token: { type: "base64", optional: true },
       tokenforreset: { type: "base64", optional: true },
       hash: { type: "/", optional: true },
       deleted: { type: "bool", default: false },
@@ -29,8 +28,8 @@ module.exports = (dbs, types, collectionName = "users") => {
   );
 
   class User extends _User {
-    constructor(content) {
-      super(content);
+    constructor(dbs, content) {
+      super(dbs, content);
     }
 
     async setExtra() {}
@@ -152,5 +151,5 @@ module.exports = (dbs, types, collectionName = "users") => {
     }
   }
 
-  return [Users, User, NoUser];
+  return makeModel("User", [Users, User, NoUser]);
 };

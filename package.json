@@ -1,11 +1,11 @@
 {
   "name": "@apparts/login-server",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Login and Signup for Web, Apps, Server",
   "main": "index.js",
   "scripts": {
     "testOne": "jest",
-    "test": "jest --watch",
+    "test": "jest --watch --detectOpenHandles",
     "testCoverage": "jest --coverage",
     "serve": "node ./server/app.js",
     "setupDB": "node ./server/scripts/setup.js"
@@ -26,21 +26,15 @@
   "license": "MIT",
   "dependencies": {
     "@apparts/config": "^1.0.5",
-    "@apparts/db": "^2.0.0",
-    "@apparts/error": "^1.0.3",
-    "@apparts/logger": "^1.0.0",
-    "@apparts/model": "^3.0.1",
-    "@apparts/types": "^5.0.0",
+    "@apparts/db": "^2.1.1",
+    "@apparts/error": "^1.1.0",
+    "@apparts/model": "^4.0.2",
+    "@apparts/types": "^6.1.2",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^8.5.1"
   },
   "devDependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.16.4",
-    "jest": "^26.4.0",
-    "pg": "^8.3.0",
-    "ramda": "^0.27.1",
-    "supertest": "^4.0.2"
+    "@apparts/backend-test": "^1.0.2"
   },
   "optionalPeerDependencies": {
     "apparts-node-app": "git+ssh://git@ph-uhl.com:Apparts/apparts-node-app#semver:^1.0.0"
