@@ -12,7 +12,7 @@
      const { addRoutes, createUseUser } = require("@apparts/login-server");
      const express = require("express");
 
-     const useUser = createUseUser();
+     const { useUser } = createUseUser();
 
      const app = express();
      // ...
@@ -48,29 +48,40 @@
                 getAPIToken,
                 deleteUser,
                 updateUser,
-                resetPassword, } = routes;
+                resetPassword, } = routes(useUser, mail);
 
        // E.g.:
-       app.post("/v/1/user", addUser(useUser, mail));
-       app.get("/v/1/user/login", getToken(useUser, mail));
-       app.get("/v/1/user/apiToken", getAPIToken(useUser, mail));
-       app.get("/v/1/user", getUser(useUser, mail));
-       app.delete("/v/1/user", deleteUser(useUser, mail));
-       app.put("/v/1/user", updateUser(useUser, mail));
-       app.post("/v/1/user/:email/reset", resetPassword(useUser, mail));
+       app.post("/v/1/user", addUser);
+       app.get("/v/1/user/login", getToken);
+       app.get("/v/1/user/apiToken", getAPIToken);
+       app.get("/v/1/user", getUser);
+       app.delete("/v/1/user", deleteUser);
+       app.put("/v/1/user", updateUser);
+       app.post("/v/1/user/:email/reset", resetPassword);
      #+END_SRC
    - If you need to configure the User-model:
      - The table name (default ~users~):
        #+BEGIN_SRC js
          const { createUseUser } = require("@apparts/login-server");
-         const useUser = createUseUser(undefined, "myTableName");
+         const { useUser } = createUseUser(undefined, "myTableName");
        #+END_SRC
      - The types of the user (see [[https://github.com/phuhl/apparts-types#usage][@apparts/types]]):
        #+BEGIN_SRC js
          const { createUseUser } = require("@apparts/login-server");
-         const useUser = createUseUser({ customElement: { type: "string", public: true }});
+         const { useUser } = createUseUser({ customElement: { type: "string", public: true }});
        #+END_SRC
      -  Overwriting functions of the user: See [[Overwriting functions of the User-model]]
+       #+BEGIN_SRC js
+         const { createUseUser } = require("@apparts/login-server");
+         const { Users, User, NoUser } = createUseUser(/* <custom type>, <custom table name>*/);
+
+         // e.g. for User
+         class SpecialUser extends User {
+           /* overwrite stuff here */
+         }
+
+         module.exports = makeModel("SpecialUser", [Users, SpecialUser, NoUser]);
+       #+END_SRC
        
 ** Configuration
 
