@@ -1,5 +1,5 @@
 const addRoutes = require("./routes");
 const routes = require("./routes/v1/user");
-const useUser = require("./model/user");
+const createUseUser = require("./model/user");
 
-module.exports = { addRoutes, routes, useUser };
+module.exports = { addRoutes, routes, createUseUser };

@@ -9,8 +9,10 @@
 1. ~npm i --save @apparts/login-server~
 2. Add the package to your codebase:
    #+BEGIN_SRC js
-     const { addRoutes, useUser } = require("@apparts/login-server");
+     const { addRoutes, createUseUser } = require("@apparts/login-server");
      const express = require("express");
+
+     const useUser = createUseUser();
 
      const app = express();
      // ...
@@ -60,13 +62,13 @@
    - If you need to configure the User-model:
      - The table name (default ~users~):
        #+BEGIN_SRC js
-         const { useUser: _useUser } = require("@apparts/login-server");
-         const useUser = (dbs) => _useUser(dbs, undefined, "myTableName");
+         const { createUseUser } = require("@apparts/login-server");
+         const useUser = createUseUser(undefined, "myTableName");
        #+END_SRC
      - The types of the user (see [[https://github.com/phuhl/apparts-types#usage][@apparts/types]]):
        #+BEGIN_SRC js
-         const { useUser: _useUser } = require("@apparts/login-server");
-         const useUser = (dbs) => _useUser(dbs, { customElement: { type: "string", public: true }});
+         const { createUseUser } = require("@apparts/login-server");
+         const useUser = createUseUser({ customElement: { type: "string", public: true }});
        #+END_SRC
      -  Overwriting functions of the user: See [[Overwriting functions of the User-model]]
        
