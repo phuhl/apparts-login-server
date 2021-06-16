@@ -72,6 +72,7 @@
        #+END_SRC
      -  Overwriting functions of the user: See [[Overwriting functions of the User-model]]
        #+BEGIN_SRC js
+         const { makeModel } = require("@apparts/model");
          const { createUseUser } = require("@apparts/login-server");
          const { Users, User, NoUser } = createUseUser(/* <custom type>, <custom table name>*/);
 
